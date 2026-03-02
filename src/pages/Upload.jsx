@@ -1,117 +1,173 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
-import { Upload as UploadIcon, FileText, ArrowLeft, CheckCircle, Loader2, Trash2 } from "lucide-react";
+import {
+  Upload as UploadIcon, FileText, ArrowLeft, CheckCircle,
+  Loader2, Trash2, X, BookOpen, Zap, ChevronRight, Eye, EyeOff, RefreshCw
+} from "lucide-react";
+
+const STEPS = ["Upload", "Configure", "Generate"];
+
+const DIFFICULTY_INFO = {
+  easy:   { color: "emerald", label: "Easy",   count: 15, desc: "15 multiple choice questions · Great for first review" },
+  medium: { color: "amber",   label: "Medium",  count: 25, desc: "25 questions · Multiple choice + enumeration · Hints included" },
+  hard:   { color: "rose",    label: "Hard",    count: 35, desc: "35 questions · All types + fill-in-the-blank · No hints" },
+};
+
+function getFileType(file) {
+  if (!file) return "text";
+  const name = file.name.toLowerCase();
+  if (name.endsWith(".pdf")) return "pdf";
+  if (name.endsWith(".pptx") || name.endsWith(".ppt")) return "pptx";
+  return "image";
+}
+
+function FileIcon({ type }) {
+  const icons = { pdf: "📄", pptx: "📊", image: "🖼️", text: "📝" };
+  return <span className="text-2xl">{icons[type] || "📄"}</span>;
+}
 
 export default function Upload() {
   const [user, setUser] = useState(null);
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [generating, setGenerating] = useState(false);
+
+  // Step state
+  const [step, setStep] = useState(0); // 0=upload, 1=configure, 2=generating
   const [title, setTitle] = useState("");
   const [textContent, setTextContent] = useState("");
   const [file, setFile] = useState(null);
+  const [extractedContent, setExtractedContent] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
   const [difficulty, setDifficulty] = useState("medium");
-  const [success, setSuccess] = useState("");
+
+  // Progress
+  const [progressStep, setProgressStep] = useState(""); // current generation step label
+  const [progressPct, setProgressPct] = useState(0);
+  const [done, setDone] = useState(null); // { count, title }
   const [error, setError] = useState("");
+  const [dragging, setDragging] = useState(false);
+
+  const dropRef = useRef(null);
 
   useEffect(() => {
-    init();
+    base44.auth.me().then(u => {
+      setUser(u);
+      return base44.entities.StudyMaterial.filter({ user_id: u.email });
+    }).then(setMaterials).catch(() => base44.auth.redirectToLogin(createPageUrl("Upload")))
+      .finally(() => setLoading(false));
   }, []);
 
-  const init = async () => {
-    try {
-      const u = await base44.auth.me();
-      setUser(u);
-      const mats = await base44.entities.StudyMaterial.filter({ user_id: u.email });
-      setMaterials(mats);
-    } catch {
-      base44.auth.redirectToLogin(createPageUrl("Upload"));
-    } finally {
-      setLoading(false);
+  // Drag and drop
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragging(false);
+    const f = e.dataTransfer.files[0];
+    if (f) handleFileSelect(f);
+  };
+
+  const handleFileSelect = (f) => {
+    setFile(f);
+    if (!title) setTitle(f.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "));
+  };
+
+  const removeFile = () => { setFile(null); setExtractedContent(""); };
+
+  const canProceedStep0 = file || textContent.trim().length > 20;
+  const canProceedStep1 = title.trim().length > 0;
+
+  const handleNext = async () => {
+    if (step === 0) {
+      if (!canProceedStep0) { setError("Please upload a file or paste at least 20 characters of notes."); return; }
+      setError("");
+      setStep(1);
+    } else if (step === 1) {
+      if (!canProceedStep1) { setError("Please enter a title for this material."); return; }
+      setError("");
+      await runGeneration();
     }
   };
 
-  const handleSubmit = async () => {
-    if (!title.trim()) { setError("Please enter a title."); return; }
-    if (!textContent.trim() && !file) { setError("Please provide content or upload a file."); return; }
-    setError("");
-    setUploading(true);
+  const runGeneration = async () => {
+    setStep(2);
+    setProgressPct(0);
+    setProgressStep("Uploading file...");
 
     let content = textContent;
 
     try {
       if (file) {
+        setProgressStep("Extracting text from file...");
+        setProgressPct(15);
         const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        setProgressPct(30);
         const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
           file_url,
           json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
         });
-        if (result.status === "success") content = result.output?.text || textContent;
+        if (result.status === "success" && result.output?.text) {
+          content = result.output.text;
+          setExtractedContent(content);
+        }
+        setProgressPct(45);
       }
 
+      setProgressStep("Saving material...");
+      setProgressPct(50);
       const material = await base44.entities.StudyMaterial.create({
         user_id: user.email,
-        title,
+        title: title.trim(),
         content,
-        file_type: file ? (file.name.endsWith(".pdf") ? "pdf" : file.name.endsWith(".pptx") ? "pptx" : "image") : "text"
+        file_type: getFileType(file)
       });
 
-      setUploading(false);
-      setGenerating(true);
+      setProgressStep("Analyzing content & generating questions...");
+      setProgressPct(60);
 
-      const qCounts = { easy: 15, medium: 25, hard: 35 };
-      const count = qCounts[difficulty];
-
+      const count = DIFFICULTY_INFO[difficulty].count;
       const difficultyInstructions = {
-        easy: `
-QUESTION TYPES: Multiple choice ONLY (4 options each).
-- Test basic recall and recognition of key facts.
-- Options must include 1 clearly correct answer and 3 plausible but wrong distractors.
+        easy: `QUESTION TYPES: Multiple choice ONLY (4 options each).
+- Test basic recall and recognition of key facts from the material.
+- Options: 1 clearly correct answer + 3 plausible but wrong distractors.
 - Questions should be straightforward and unambiguous.
 - HINT: Give a vague category clue (e.g. "Think about what happens at the start of the process") — never reveal the answer.`,
-
-        medium: `
-QUESTION TYPES: Mix of multiple choice (4 options) AND enumeration (list answers).
-- Multiple choice: Test understanding and application of concepts.
-- Enumeration: Ask students to list steps, components, or examples (e.g. "List 3 causes of..."). Correct answer = comma-separated list of key terms.
+        medium: `QUESTION TYPES: Mix of multiple choice (4 options) AND enumeration.
+- Multiple choice (~60%): Test understanding and application of concepts.
+- Enumeration (~40%): Ask students to list steps, components, or examples. Correct answer = comma-separated key terms.
 - Questions should require understanding, not just memorization.
-- HINT: Give a structural clue (e.g. "There are 3 parts to this answer" or "Consider the relationship between X and Y") — do NOT give away the answer.`,
-
-        hard: `
-QUESTION TYPES: Mix of multiple choice (4 options), enumeration, AND fill-in-the-blank.
-- Multiple choice: Test deep analysis and nuanced understanding.
-- Enumeration: Require precise recall of ordered or unordered lists.
-- Fill-in-the-blank: Remove a key term or phrase from a sentence from the material (e.g. "The process of ___ converts glucose into ATP."). Correct answer = exact missing word/phrase.
+- HINT: Give a structural clue (e.g. "There are 3 parts" or "Consider the relationship between X and Y") — do NOT reveal the answer.`,
+        hard: `QUESTION TYPES: Mix of multiple choice (4 options), enumeration, AND fill-in-the-blank.
+- Multiple choice (~40%): Test deep analysis and nuanced understanding.
+- Enumeration (~30%): Require precise recall of lists.
+- Fill-in-the-blank (~30%): Remove a key term from a real sentence in the material. Use ___ for the blank. Correct answer = exact missing word/phrase.
 - Questions should challenge critical thinking and precise recall.
-- NO HINTS for hard difficulty — set hint to an empty string "".`
+- NO HINTS — set hint to "".`
       };
 
-      const prompt = `You are an expert educational question generator for a gamified learning app. Your job is to create high-quality study questions STRICTLY based on the provided material.
+      const prompt = `You are an expert educational question generator for a gamified learning app. Create high-quality study questions STRICTLY based on the provided material.
 
 ═══════════════════════════════════
-STUDY MATERIAL (use ONLY this content):
+STUDY MATERIAL:
 ═══════════════════════════════════
 ${content.slice(0, 10000)}
 ═══════════════════════════════════
 
-TASK: Generate exactly ${count} questions at difficulty level: "${difficulty.toUpperCase()}"
+TASK: Generate exactly ${count} questions at difficulty: "${difficulty.toUpperCase()}"
 
 ${difficultyInstructions[difficulty]}
 
-GLOBAL RULES (apply to ALL questions):
-1. Every question must be directly answerable from the study material above. NO external knowledge.
-2. Cover a WIDE variety of topics from the material — do not repeat the same concept.
+GLOBAL RULES:
+1. Every question must be directly answerable from the material above. NO external knowledge.
+2. Cover a WIDE variety of topics — do not repeat the same concept twice.
 3. Each question must be unique and test a different piece of knowledge.
-4. Explanations must be 1-2 sentences that clearly explain WHY the answer is correct, referencing the material.
-5. For multiple_choice: always provide exactly 4 options in the "options" array.
-6. For enumeration: provide an empty "options" array []. Correct answer = key terms separated by commas.
-7. For fill_blank: provide an empty "options" array []. The question_text must contain a blank indicated by ___.
-8. The "topic" field = a short 2-4 word label for the concept being tested (e.g. "Cell Division", "French Revolution Causes").
-9. Vary question difficulty within the set — some easier, some harder, but all at the "${difficulty}" tier.
-10. Never generate trick questions or questions with ambiguous answers.
+4. Explanations: 1-2 sentences explaining WHY the answer is correct, citing the material.
+5. multiple_choice: exactly 4 options in the "options" array.
+6. enumeration: empty "options" array []. correct_answer = comma-separated key terms.
+7. fill_blank: empty "options" array []. question_text must contain ___ for the blank.
+8. "topic" = short 2-4 word label (e.g. "Cell Division", "World War II Causes").
+9. Never generate trick questions or questions with ambiguous answers.
+10. Shuffle the correct answer position in multiple choice options randomly.
 
 Generate exactly ${count} questions now.`;
 
@@ -119,11 +175,13 @@ Generate exactly ${count} questions now.`;
         prompt,
         response_json_schema: {
           type: "object",
+          required: ["questions"],
           properties: {
             questions: {
               type: "array",
               items: {
                 type: "object",
+                required: ["question_text", "question_type", "correct_answer", "explanation", "topic"],
                 properties: {
                   question_text: { type: "string" },
                   question_type: { type: "string", enum: ["multiple_choice", "enumeration", "fill_blank"] },
@@ -132,14 +190,15 @@ Generate exactly ${count} questions now.`;
                   explanation: { type: "string" },
                   topic: { type: "string" },
                   hint: { type: "string" }
-                },
-                required: ["question_text", "question_type", "correct_answer", "explanation", "topic"]
+                }
               }
             }
-          },
-          required: ["questions"]
+          }
         }
       });
+
+      setProgressStep("Saving questions...");
+      setProgressPct(85);
 
       const questions = response.questions || [];
       if (questions.length > 0) {
@@ -149,22 +208,28 @@ Generate exactly ${count} questions now.`;
             material_id: material.id,
             user_id: user.email,
             difficulty,
-            options: q.options || []
+            options: q.options || [],
+            hint: q.hint || ""
           }))
         );
         await base44.entities.StudyMaterial.update(material.id, { question_count: questions.length });
       }
 
-      setSuccess(`Generated ${questions.length} questions from "${title}"!`);
-      setTitle(""); setTextContent(""); setFile(null);
+      setProgressPct(100);
+      setProgressStep("Done!");
+      setDone({ count: questions.length, title: title.trim() });
+
       const mats = await base44.entities.StudyMaterial.filter({ user_id: user.email });
       setMaterials(mats);
     } catch (e) {
-      setError("Failed to process material. Please try again.");
-    } finally {
-      setUploading(false);
-      setGenerating(false);
+      setError("Something went wrong. Please try again.");
+      setStep(1);
     }
+  };
+
+  const resetForm = () => {
+    setStep(0); setTitle(""); setTextContent(""); setFile(null);
+    setExtractedContent(""); setDone(null); setError(""); setProgressPct(0);
   };
 
   const deleteMaterial = async (id) => {
@@ -172,11 +237,17 @@ Generate exactly ${count} questions now.`;
     setMaterials(prev => prev.filter(m => m.id !== id));
   };
 
-  if (loading) return <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center text-white animate-pulse">Loading...</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center text-white">
+      <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading...
+    </div>
+  );
+
+  const diffInfo = DIFFICULTY_INFO[difficulty];
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
-      <header className="border-b border-white/5 px-6 py-4 flex items-center gap-4">
+      <header className="border-b border-white/5 px-6 py-4 flex items-center gap-4 sticky top-0 bg-[#0a0a0f]/90 backdrop-blur-sm z-10">
         <Link to={createPageUrl("Dashboard")} className="text-white/40 hover:text-white transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
@@ -184,98 +255,257 @@ Generate exactly ${count} questions now.`;
       </header>
 
       <main className="max-w-2xl mx-auto px-6 py-10">
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
-          <h2 className="font-semibold mb-4">Add New Material</h2>
 
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm text-white/60 block mb-1">Title *</label>
-              <input
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                placeholder="e.g. Chapter 5 - Cell Biology"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-violet-500 transition-colors"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm text-white/60 block mb-1">Upload File (PDF, PPTX, Image)</label>
-              <div
-                onClick={() => document.getElementById("fileInput").click()}
-                className="border-2 border-dashed border-white/10 hover:border-violet-500/50 rounded-xl p-6 text-center cursor-pointer transition-colors"
-              >
-                <UploadIcon className="w-8 h-8 mx-auto mb-2 text-white/30" />
-                <p className="text-white/40 text-sm">{file ? file.name : "Click to upload or drag and drop"}</p>
-                <input id="fileInput" type="file" accept=".pdf,.pptx,.png,.jpg,.jpeg" className="hidden" onChange={e => setFile(e.target.files[0])} />
+        {/* Step Indicator */}
+        {step < 2 && (
+          <div className="flex items-center gap-2 mb-8">
+            {STEPS.map((s, i) => (
+              <div key={s} className="flex items-center gap-2">
+                <div className={`flex items-center gap-2 text-sm font-medium transition-colors ${i === step ? "text-violet-400" : i < step ? "text-white/60" : "text-white/20"}`}>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs border ${i === step ? "bg-violet-600 border-violet-500" : i < step ? "bg-white/20 border-white/20" : "border-white/10"}`}>
+                    {i < step ? <CheckCircle className="w-3.5 h-3.5" /> : i + 1}
+                  </div>
+                  {s}
+                </div>
+                {i < STEPS.length - 1 && <ChevronRight className="w-4 h-4 text-white/15" />}
               </div>
+            ))}
+          </div>
+        )}
+
+        {/* STEP 0: Upload Content */}
+        {step === 0 && (
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-lg font-semibold mb-1">Add your study material</h2>
+              <p className="text-white/40 text-sm">Upload a file or paste your notes below</p>
             </div>
 
+            {/* Drop Zone */}
+            <div
+              ref={dropRef}
+              onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={handleDrop}
+              onClick={() => !file && document.getElementById("fileInput").click()}
+              className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${
+                dragging ? "border-violet-500 bg-violet-500/10" :
+                file ? "border-violet-500/40 bg-violet-500/5 cursor-default" : "border-white/10 hover:border-violet-500/40 hover:bg-white/3"
+              }`}
+            >
+              <input id="fileInput" type="file" accept=".pdf,.pptx,.ppt,.png,.jpg,.jpeg" className="hidden"
+                onChange={e => e.target.files[0] && handleFileSelect(e.target.files[0])} />
+
+              {file ? (
+                <div className="flex items-center justify-center gap-4">
+                  <FileIcon type={getFileType(file)} />
+                  <div className="text-left">
+                    <p className="font-medium text-sm">{file.name}</p>
+                    <p className="text-xs text-white/40 mt-0.5">{(file.size / 1024).toFixed(0)} KB · {getFileType(file).toUpperCase()}</p>
+                  </div>
+                  <button onClick={(e) => { e.stopPropagation(); removeFile(); }}
+                    className="ml-2 p-1.5 bg-white/10 hover:bg-rose-500/20 hover:text-rose-400 rounded-lg transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <UploadIcon className="w-10 h-10 mx-auto mb-3 text-white/20" />
+                  <p className="font-medium text-white/60 mb-1">Drop your file here or click to browse</p>
+                  <p className="text-xs text-white/30">Supports PDF, PowerPoint (.pptx), PNG, JPG</p>
+                </>
+              )}
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-white/8" />
+              <span className="text-xs text-white/30 font-medium">OR</span>
+              <div className="flex-1 h-px bg-white/8" />
+            </div>
+
+            {/* Text Input */}
             <div>
-              <label className="text-sm text-white/60 block mb-1">Or Paste / Type Notes</label>
+              <label className="text-sm text-white/60 block mb-2">Paste or type your notes</label>
               <textarea
                 value={textContent}
                 onChange={e => setTextContent(e.target.value)}
-                placeholder="Paste your study notes here..."
-                rows={6}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-violet-500 transition-colors resize-none"
+                placeholder="Paste lecture notes, textbook excerpts, or any study material here..."
+                rows={8}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/25 focus:outline-none focus:border-violet-500 transition-colors resize-none text-sm leading-relaxed"
+              />
+              {textContent.length > 0 && (
+                <p className="text-xs text-white/30 mt-1 text-right">{textContent.length} characters</p>
+              )}
+            </div>
+
+            {error && <p className="text-rose-400 text-sm">{error}</p>}
+
+            <button
+              onClick={handleNext}
+              disabled={!canProceedStep0}
+              className="w-full py-3.5 bg-violet-600 hover:bg-violet-500 disabled:bg-white/8 disabled:text-white/30 disabled:cursor-not-allowed rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              Continue <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* STEP 1: Configure */}
+        {step === 1 && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-semibold mb-1">Configure your questions</h2>
+              <p className="text-white/40 text-sm">Set a title and choose how challenging the questions should be</p>
+            </div>
+
+            {/* Source Preview */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  {file ? <FileIcon type={getFileType(file)} /> : <span className="text-lg">📝</span>}
+                  <span>{file ? file.name : "Pasted notes"}</span>
+                </div>
+                {textContent && (
+                  <button onClick={() => setShowPreview(!showPreview)} className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors">
+                    {showPreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    {showPreview ? "Hide" : "Preview"}
+                  </button>
+                )}
+              </div>
+              {showPreview && (
+                <div className="mt-2 max-h-32 overflow-y-auto text-xs text-white/50 leading-relaxed border-t border-white/5 pt-2">
+                  {(textContent || extractedContent).slice(0, 600)}...
+                </div>
+              )}
+            </div>
+
+            {/* Title */}
+            <div>
+              <label className="text-sm text-white/60 block mb-1.5">Material Title *</label>
+              <input
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="e.g. Chapter 5 – Cell Biology"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/25 focus:outline-none focus:border-violet-500 transition-colors"
               />
             </div>
 
+            {/* Difficulty */}
             <div>
               <label className="text-sm text-white/60 block mb-2">Question Difficulty</label>
-              <div className="flex gap-3">
-                {["easy", "medium", "hard"].map(d => (
+              <div className="grid grid-cols-3 gap-3">
+                {Object.entries(DIFFICULTY_INFO).map(([key, info]) => (
                   <button
-                    key={d}
-                    onClick={() => setDifficulty(d)}
-                    className={`flex-1 py-2 rounded-xl text-sm font-semibold border capitalize transition-all ${
-                      difficulty === d
-                        ? d === "easy" ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
-                          : d === "medium" ? "bg-amber-500/20 border-amber-500 text-amber-400"
-                          : "bg-rose-500/20 border-rose-500 text-rose-400"
-                        : "border-white/10 text-white/40 hover:border-white/20"
+                    key={key}
+                    onClick={() => setDifficulty(key)}
+                    className={`p-4 rounded-xl border text-left transition-all ${
+                      difficulty === key
+                        ? key === "easy"   ? "bg-emerald-500/15 border-emerald-500 ring-1 ring-emerald-500/30"
+                          : key === "medium" ? "bg-amber-500/15 border-amber-500 ring-1 ring-amber-500/30"
+                          :                   "bg-rose-500/15 border-rose-500 ring-1 ring-rose-500/30"
+                        : "bg-white/3 border-white/8 hover:bg-white/6 hover:border-white/15"
                     }`}
                   >
-                    {d}
+                    <div className={`font-bold text-sm mb-1 ${difficulty === key ? (key === "easy" ? "text-emerald-400" : key === "medium" ? "text-amber-400" : "text-rose-400") : "text-white/60"}`}>
+                      {info.label}
+                    </div>
+                    <div className="text-xs text-white/35 leading-snug">{info.desc}</div>
                   </button>
                 ))}
               </div>
             </div>
 
-            {error && <p className="text-rose-400 text-sm">{error}</p>}
-            {success && (
-              <div className="flex items-center gap-2 text-emerald-400 text-sm">
-                <CheckCircle className="w-4 h-4" /> {success}
-              </div>
-            )}
+            {/* Summary */}
+            <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl px-4 py-3 flex items-center gap-3">
+              <Zap className="w-4 h-4 text-violet-400 shrink-0" />
+              <p className="text-sm text-white/60">
+                Will generate <span className="text-white font-semibold">{DIFFICULTY_INFO[difficulty].count} {difficulty}</span> questions from your material
+              </p>
+            </div>
 
-            <button
-              onClick={handleSubmit}
-              disabled={uploading || generating}
-              className="w-full py-3 bg-violet-600 hover:bg-violet-500 disabled:bg-white/10 disabled:cursor-not-allowed rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
-            >
-              {uploading && <><Loader2 className="w-4 h-4 animate-spin" /> Uploading...</>}
-              {generating && <><Loader2 className="w-4 h-4 animate-spin" /> Generating Questions...</>}
-              {!uploading && !generating && "Generate Questions"}
-            </button>
+            {error && <p className="text-rose-400 text-sm">{error}</p>}
+
+            <div className="flex gap-3">
+              <button onClick={() => setStep(0)} className="px-5 py-3 bg-white/8 hover:bg-white/12 rounded-xl text-sm font-semibold transition-colors">
+                Back
+              </button>
+              <button
+                onClick={handleNext}
+                disabled={!canProceedStep1}
+                className="flex-1 py-3 bg-violet-600 hover:bg-violet-500 disabled:bg-white/8 disabled:text-white/30 disabled:cursor-not-allowed rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+              >
+                <Zap className="w-4 h-4" /> Generate {DIFFICULTY_INFO[difficulty].count} Questions
+              </button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* STEP 2: Generating */}
+        {step === 2 && !done && (
+          <div className="text-center py-12 space-y-6">
+            <div className="w-20 h-20 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mx-auto">
+              <Loader2 className="w-10 h-10 text-violet-400 animate-spin" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold mb-2">Generating Questions...</h2>
+              <p className="text-white/40 text-sm">{progressStep}</p>
+            </div>
+            <div className="max-w-xs mx-auto">
+              <div className="bg-white/8 rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-violet-500 to-purple-400 h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+              <p className="text-xs text-white/30 mt-2">{progressPct}%</p>
+            </div>
+            <p className="text-white/25 text-xs">This may take 20–40 seconds for longer materials</p>
+          </div>
+        )}
+
+        {/* STEP 2: Done */}
+        {step === 2 && done && (
+          <div className="text-center py-12 space-y-6">
+            <div className="w-20 h-20 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto">
+              <CheckCircle className="w-10 h-10 text-emerald-400" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold mb-2">Questions Ready!</h2>
+              <p className="text-white/60 text-sm">
+                Generated <span className="text-white font-bold">{done.count} questions</span> from <span className="text-white font-bold">"{done.title}"</span>
+              </p>
+            </div>
+            <div className="flex gap-3 justify-center">
+              <button onClick={resetForm} className="flex items-center gap-2 px-5 py-3 bg-white/8 hover:bg-white/12 rounded-xl text-sm font-semibold transition-colors">
+                <RefreshCw className="w-4 h-4" /> Upload More
+              </button>
+              <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-5 py-3 bg-violet-600 hover:bg-violet-500 rounded-xl text-sm font-semibold transition-colors">
+                <BookOpen className="w-4 h-4" /> Play Now
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Materials List */}
-        {materials.length > 0 && (
-          <div>
-            <h2 className="font-semibold mb-4">Your Materials</h2>
-            <div className="space-y-3">
+        {step < 2 && materials.length > 0 && (
+          <div className="mt-10">
+            <h2 className="font-semibold mb-4 flex items-center gap-2 text-white/80">
+              <FileText className="w-4 h-4 text-violet-400" /> Your Materials ({materials.length})
+            </h2>
+            <div className="space-y-2">
               {materials.map(m => (
-                <div key={m.id} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between">
+                <div key={m.id} className="bg-white/4 border border-white/8 rounded-xl p-4 flex items-center justify-between hover:bg-white/6 transition-colors">
                   <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-violet-400" />
+                    <FileIcon type={m.file_type} />
                     <div>
                       <p className="font-medium text-sm">{m.title}</p>
-                      <p className="text-xs text-white/40">{m.question_count || 0} questions · {m.file_type}</p>
+                      <p className="text-xs text-white/35 mt-0.5">
+                        {m.question_count || 0} questions · {m.file_type?.toUpperCase()} · {new Date(m.created_date).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
-                  <button onClick={() => deleteMaterial(m.id)} className="text-white/30 hover:text-rose-400 transition-colors">
+                  <button onClick={() => deleteMaterial(m.id)} className="p-2 text-white/25 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
