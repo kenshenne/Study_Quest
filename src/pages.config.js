@@ -51,6 +51,8 @@ import Dashboard from './pages/Dashboard';
 import Upload from './pages/Upload';
 import Profile from './pages/Profile';
 import Leaderboard from './pages/Leaderboard';
+import MazeGame from './pages/MazeGame';
+import BombGame from './pages/BombGame';
 
 
 export const PAGES = {
@@ -58,6 +60,8 @@ export const PAGES = {
     "Upload": Upload,
     "Profile": Profile,
     "Leaderboard": Leaderboard,
+    "MazeGame": MazeGame,
+    "BombGame": BombGame,
 }
 
 export const pagesConfig = {
