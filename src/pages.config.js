@@ -53,6 +53,8 @@ import Profile from './pages/Profile';
 import Leaderboard from './pages/Leaderboard';
 import MazeGame from './pages/MazeGame';
 import BombGame from './pages/BombGame';
+import BlastGame from './pages/BlastGame';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
@@ -62,9 +64,11 @@ export const PAGES = {
     "Leaderboard": Leaderboard,
     "MazeGame": MazeGame,
     "BombGame": BombGame,
+    "BlastGame": BlastGame,
 }
 
 export const pagesConfig = {
     mainPage: "Dashboard",
     Pages: PAGES,
+    Layout: __Layout,
 };
