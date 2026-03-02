@@ -62,25 +62,58 @@ export default function Upload() {
       setUploading(false);
       setGenerating(true);
 
-      // Generate questions via LLM
       const qCounts = { easy: 15, medium: 25, hard: 35 };
       const count = qCounts[difficulty];
-      
-      const prompt = `You are a study question generator. Based ONLY on the following study material, generate ${count} questions.
-      
-Study Material:
-${content.slice(0, 8000)}
 
-Rules:
-- Questions must be based STRICTLY on the provided material. No external info.
-- For easy: multiple choice only
-- For medium: mix of multiple choice and enumeration  
-- For hard: mix of multiple choice, enumeration, and fill-in-the-blank
-- Hints must be vague, do NOT reveal the answer
-- Provide clear explanations
+      const difficultyInstructions = {
+        easy: `
+QUESTION TYPES: Multiple choice ONLY (4 options each).
+- Test basic recall and recognition of key facts.
+- Options must include 1 clearly correct answer and 3 plausible but wrong distractors.
+- Questions should be straightforward and unambiguous.
+- HINT: Give a vague category clue (e.g. "Think about what happens at the start of the process") — never reveal the answer.`,
 
-Generate exactly ${count} questions of difficulty "${difficulty}".
-Return JSON array of questions.`;
+        medium: `
+QUESTION TYPES: Mix of multiple choice (4 options) AND enumeration (list answers).
+- Multiple choice: Test understanding and application of concepts.
+- Enumeration: Ask students to list steps, components, or examples (e.g. "List 3 causes of..."). Correct answer = comma-separated list of key terms.
+- Questions should require understanding, not just memorization.
+- HINT: Give a structural clue (e.g. "There are 3 parts to this answer" or "Consider the relationship between X and Y") — do NOT give away the answer.`,
+
+        hard: `
+QUESTION TYPES: Mix of multiple choice (4 options), enumeration, AND fill-in-the-blank.
+- Multiple choice: Test deep analysis and nuanced understanding.
+- Enumeration: Require precise recall of ordered or unordered lists.
+- Fill-in-the-blank: Remove a key term or phrase from a sentence from the material (e.g. "The process of ___ converts glucose into ATP."). Correct answer = exact missing word/phrase.
+- Questions should challenge critical thinking and precise recall.
+- NO HINTS for hard difficulty — set hint to an empty string "".`
+      };
+
+      const prompt = `You are an expert educational question generator for a gamified learning app. Your job is to create high-quality study questions STRICTLY based on the provided material.
+
+═══════════════════════════════════
+STUDY MATERIAL (use ONLY this content):
+═══════════════════════════════════
+${content.slice(0, 10000)}
+═══════════════════════════════════
+
+TASK: Generate exactly ${count} questions at difficulty level: "${difficulty.toUpperCase()}"
+
+${difficultyInstructions[difficulty]}
+
+GLOBAL RULES (apply to ALL questions):
+1. Every question must be directly answerable from the study material above. NO external knowledge.
+2. Cover a WIDE variety of topics from the material — do not repeat the same concept.
+3. Each question must be unique and test a different piece of knowledge.
+4. Explanations must be 1-2 sentences that clearly explain WHY the answer is correct, referencing the material.
+5. For multiple_choice: always provide exactly 4 options in the "options" array.
+6. For enumeration: provide an empty "options" array []. Correct answer = key terms separated by commas.
+7. For fill_blank: provide an empty "options" array []. The question_text must contain a blank indicated by ___.
+8. The "topic" field = a short 2-4 word label for the concept being tested (e.g. "Cell Division", "French Revolution Causes").
+9. Vary question difficulty within the set — some easier, some harder, but all at the "${difficulty}" tier.
+10. Never generate trick questions or questions with ambiguous answers.
+
+Generate exactly ${count} questions now.`;
 
       const response = await base44.integrations.Core.InvokeLLM({
         prompt,
@@ -99,10 +132,12 @@ Return JSON array of questions.`;
                   explanation: { type: "string" },
                   topic: { type: "string" },
                   hint: { type: "string" }
-                }
+                },
+                required: ["question_text", "question_type", "correct_answer", "explanation", "topic"]
               }
             }
-          }
+          },
+          required: ["questions"]
         }
       });
 
