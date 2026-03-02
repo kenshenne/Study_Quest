@@ -47,8 +47,20 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import Dashboard from './pages/Dashboard';
+import Upload from './pages/Upload';
+import Profile from './pages/Profile';
+import Leaderboard from './pages/Leaderboard';
 
-export const pagesConfig = {
-	Pages: {}
+
+export const PAGES = {
+    "Dashboard": Dashboard,
+    "Upload": Upload,
+    "Profile": Profile,
+    "Leaderboard": Leaderboard,
 }
 
+export const pagesConfig = {
+    mainPage: "Dashboard",
+    Pages: PAGES,
+};
