@@ -1,6 +1,60 @@
 import { useEffect } from "react";
+import { base44 } from "@/api/base44Client";
 
 export default function Layout({ children, currentPageName }) {
+  useEffect(() => {
+    // Heartbeat: keep online status updated
+    let userId = null;
+    let intervalId = null;
+
+    const startHeartbeat = async () => {
+      try {
+        const u = await base44.auth.me();
+        if (!u) return;
+        userId = u.email;
+        const profiles = await base44.entities.UserProfile.filter({ user_id: u.email });
+        const profile = profiles[0];
+
+        const ping = async () => {
+          const existing = await base44.entities.OnlineStatus.filter({ user_id: u.email });
+          const data = {
+            user_id: u.email,
+            username: profile?.username || u.email,
+            avatar: profile?.avatar || "🎓",
+            last_seen: new Date().toISOString(),
+            is_online: true
+          };
+          if (existing.length > 0) {
+            await base44.entities.OnlineStatus.update(existing[0].id, data);
+          } else {
+            await base44.entities.OnlineStatus.create(data);
+          }
+        };
+
+        await ping();
+        intervalId = setInterval(ping, 60000); // every 60s
+      } catch {}
+    };
+
+    startHeartbeat();
+
+    const setOffline = async () => {
+      if (!userId) return;
+      try {
+        const existing = await base44.entities.OnlineStatus.filter({ user_id: userId });
+        if (existing.length > 0) {
+          await base44.entities.OnlineStatus.update(existing[0].id, { is_online: false, last_seen: new Date().toISOString() });
+        }
+      } catch {}
+    };
+
+    window.addEventListener("beforeunload", setOffline);
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+      window.removeEventListener("beforeunload", setOffline);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
       <style>{`
