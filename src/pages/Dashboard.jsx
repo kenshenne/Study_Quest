@@ -217,7 +217,7 @@ export default function Dashboard() {
         </div>
 
         {/* Upload CTA */}
-        <div className="mt-6 bg-white/5 border border-white/10 rounded-2xl p-6 flex items-center justify-between">
+        <div className="mt-5 bg-white/5 border border-white/10 rounded-2xl p-5 md:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h3 className="font-semibold mb-1">Upload Study Materials</h3>
             <p className="text-white/40 text-sm">Upload PDFs, slides, or notes to generate questions automatically</p>
