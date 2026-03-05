@@ -6,6 +6,8 @@ import { ArrowLeft, Users, User } from "lucide-react";
 import QuestionModal from "../components/game/QuestionModal";
 import GameOverModal from "../components/game/GameOverModal";
 import MaterialSelector from "../components/game/MaterialSelector";
+import AchievementToast from "../components/achievements/AchievementToast";
+import { checkAndAwardAchievements } from "../components/achievements/achievementsLib";
 
 const CELL_SIZE = 40;
 const COLS = 15;
@@ -76,6 +78,8 @@ export default function MazeGame() {
   const [friends, setFriends] = useState([]);
   const [showInvite, setShowInvite] = useState(false);
   const [playMode, setPlayMode] = useState(null);
+  const [sessionId, setSessionId] = useState(null);
+  const [newAchievements, setNewAchievements] = useState([]);
   const gameRef = useRef(null);
 
   useEffect(() => {
