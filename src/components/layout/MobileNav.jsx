@@ -42,7 +42,7 @@ export default function MobileNav({ unreadMessages = 0, profile }) {
         <div
           ref={overlayRef}
           onClick={() => setOpen(false)}
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
         />
       )}
 
