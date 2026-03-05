@@ -42,7 +42,6 @@ export default function Dashboard() {
       setRecentSessions(sessions);
       setAchievements(achs);
 
-      // Count unread messages
       const msgs = await base44.entities.ChatMessage.filter({ to_user_id: u.email, read: false });
       setUnreadMessages(msgs.length);
     } catch {
@@ -108,7 +107,7 @@ export default function Dashboard() {
 
       <main className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-10">
         {/* Welcome + XP */}
-        <div className="mb-10">
+        <div className="mb-8">
           <div className="flex items-center gap-3 md:gap-4 mb-4">
             <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-600/20 border border-violet-500/30 flex items-center justify-center text-2xl md:text-3xl shrink-0">
               {profile?.avatar || "🎓"}
@@ -125,34 +124,34 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-3 md:gap-4 mb-8 md:mb-10">
+        <div className="grid grid-cols-3 gap-3 md:gap-4 mb-8">
           {[
             { label: "Questions Answered", value: profile?.total_questions_answered || 0, icon: "📝" },
             { label: "Accuracy Rate", value: `${Math.round(profile?.accuracy_rate || 0)}%`, icon: "🎯" },
             { label: "Achievements", value: achievements.length, icon: "🏆" }
           ].map((stat) => (
-            <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
-              <div className="text-2xl mb-1">{stat.icon}</div>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <div className="text-xs text-white/40 mt-1">{stat.label}</div>
+            <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-3 md:p-4 text-center">
+              <div className="text-xl md:text-2xl mb-1">{stat.icon}</div>
+              <div className="text-lg md:text-2xl font-bold">{stat.value}</div>
+              <div className="text-[10px] md:text-xs text-white/40 mt-1 leading-tight">{stat.label}</div>
             </div>
           ))}
         </div>
 
         {/* Game Modes */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <h2 className="text-lg md:text-xl font-semibold mb-4 flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-violet-400" /> Games
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {games.map((game) => (
               <Link key={game.id} to={createPageUrl(game.page)}>
                 <div className={`group relative bg-gradient-to-br ${game.color} p-[1px] rounded-2xl shadow-xl ${game.glow} hover:scale-[1.02] transition-all duration-200 cursor-pointer`}>
-                  <div className="bg-[#0f0f17] rounded-2xl p-6 h-full">
-                    <div className="mb-4 opacity-90">{game.icon}</div>
-                    <h3 className="font-bold text-lg mb-2">{game.name}</h3>
+                  <div className="bg-[#0f0f17] rounded-2xl p-5 md:p-6 h-full">
+                    <div className="mb-3 opacity-90">{game.icon}</div>
+                    <h3 className="font-bold text-base md:text-lg mb-1.5">{game.name}</h3>
                     <p className="text-white/50 text-sm leading-relaxed">{game.desc}</p>
-                    <div className={`mt-4 text-xs font-semibold bg-gradient-to-r ${game.color} bg-clip-text text-transparent`}>
+                    <div className={`mt-3 text-xs font-semibold bg-gradient-to-r ${game.color} bg-clip-text text-transparent`}>
                       Play Now →
                     </div>
                   </div>
@@ -162,7 +161,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* Recent Games */}
           <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
             <h3 className="font-semibold mb-3 flex items-center gap-2">
@@ -217,12 +216,12 @@ export default function Dashboard() {
         </div>
 
         {/* Upload CTA */}
-        <div className="mt-5 bg-white/5 border border-white/10 rounded-2xl p-5 md:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="mt-5 bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h3 className="font-semibold mb-1">Upload Study Materials</h3>
             <p className="text-white/40 text-sm">Upload PDFs, slides, or notes to generate questions automatically</p>
           </div>
-          <Link to={createPageUrl("Upload")} className="px-5 py-2.5 bg-violet-600 hover:bg-violet-500 rounded-xl text-sm font-semibold transition-colors">
+          <Link to={createPageUrl("Upload")} className="px-5 py-2.5 bg-violet-600 hover:bg-violet-500 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap">
             Upload →
           </Link>
         </div>
