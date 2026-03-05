@@ -67,6 +67,8 @@ export default function BombGame() {
   const [gameStats, setGameStats] = useState({ correct: 0, incorrect: 0, total: 0, xp: 0, mistakes: [] });
   const [revealedCount, setRevealedCount] = useState(0);
   const [flagCount, setFlagCount] = useState(0);
+  const [newAchievements, setNewAchievements] = useState([]);
+  const [sessionId, setSessionId] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -83,7 +85,22 @@ export default function BombGame() {
     setUsedQuestions([]);
     setCurrentLevel(0);
     setupLevel(0, shuffled, []);
-    setGameStats({ correct: 0, incorrect: 0, total: 0, xp: 0, mistakes: [] });
+    const stats = { correct: 0, incorrect: 0, total: 0, xp: 0, mistakes: [] };
+    setGameStats(stats);
+    // Create session immediately so partial games are saved
+    try {
+      const s = await base44.entities.GameSession.create({
+        user_id: user.email,
+        username: profile?.username || user.email,
+        game_type: "bomb",
+        difficulty,
+        material_id: matId,
+        score: 0, xp_earned: 0, total_questions: 0,
+        correct_answers: 0, incorrect_answers: 0,
+        completed: false, level_reached: 1
+      });
+      setSessionId(s.id);
+    } catch {}
     setPhase("playing");
   };
 
