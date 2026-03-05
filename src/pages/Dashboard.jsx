@@ -144,7 +144,7 @@ export default function Dashboard() {
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-violet-400" /> Games
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
             {games.map((game) => (
               <Link key={game.id} to={createPageUrl(game.page)}>
                 <div className={`group relative bg-gradient-to-br ${game.color} p-[1px] rounded-2xl shadow-xl ${game.glow} hover:scale-[1.02] transition-all duration-200 cursor-pointer`}>
