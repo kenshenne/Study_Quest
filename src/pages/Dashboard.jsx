@@ -106,7 +106,7 @@ export default function Dashboard() {
         </nav>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-10">
+      <main className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-10">
         {/* Welcome + XP */}
         <div className="mb-10">
           <div className="flex items-center gap-4 mb-4">
