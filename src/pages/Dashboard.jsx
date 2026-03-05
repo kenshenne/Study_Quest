@@ -109,13 +109,13 @@ export default function Dashboard() {
       <main className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-10">
         {/* Welcome + XP */}
         <div className="mb-10">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-600/20 border border-violet-500/30 flex items-center justify-center text-3xl">
+          <div className="flex items-center gap-3 md:gap-4 mb-4">
+            <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-600/20 border border-violet-500/30 flex items-center justify-center text-2xl md:text-3xl shrink-0">
               {profile?.avatar || "🎓"}
             </div>
             <div>
-              <h1 className="text-3xl font-bold">Welcome back, {profile?.username || "Scholar"}!</h1>
-              <p className="text-white/50 mt-1">Level {profile?.level || 1} · {profile?.xp || 0} XP total</p>
+              <h1 className="text-xl md:text-3xl font-bold">Welcome back, {profile?.username || "Scholar"}!</h1>
+              <p className="text-white/50 mt-1 text-sm">Level {profile?.level || 1} · {profile?.xp || 0} XP total</p>
             </div>
           </div>
           <div className="bg-white/5 rounded-full h-2 w-full max-w-sm">
