@@ -321,7 +321,14 @@ export default function BombGame() {
   }
 
   if (phase === "over") {
-    return <GameOverModal stats={gameStats} onRestart={() => setPhase("setup")} gameType="bomb" />;
+    return (
+      <>
+        <GameOverModal stats={gameStats} onRestart={() => { setSessionId(null); setPhase("setup"); }} gameType="bomb" />
+        {newAchievements.map((a, i) => (
+          <AchievementToast key={a.id || i} achievement={a} onDone={() => setNewAchievements(prev => prev.slice(1))} />
+        ))}
+      </>
+    );
   }
 
   const bombsLeft = grid.filter(c => c.isBomb && !c.flagged).length;
