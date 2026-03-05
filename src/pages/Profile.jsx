@@ -39,8 +39,12 @@ export default function Profile() {
         loadFriends(p);
         loadPendingRequests(p);
       }
-      const s = await base44.entities.GameSession.filter({ user_id: u.email }, "-created_date", 20);
+      const [s, achs] = await Promise.all([
+        base44.entities.GameSession.filter({ user_id: u.email }, "-created_date", 30),
+        base44.entities.Achievement.filter({ user_id: u.email })
+      ]);
       setSessions(s);
+      setAchievements(achs);
     } catch {
       base44.auth.redirectToLogin(createPageUrl("Profile"));
     } finally {
