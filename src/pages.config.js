@@ -50,6 +50,7 @@
 import BlastGame from './pages/BlastGame';
 import BombGame from './pages/BombGame';
 import Chat from './pages/Chat';
+import Dashboard from './pages/Dashboard';
 import Leaderboard from './pages/Leaderboard';
 import MazeGame from './pages/MazeGame';
 import Profile from './pages/Profile';
@@ -61,6 +62,7 @@ export const PAGES = {
     "BlastGame": BlastGame,
     "BombGame": BombGame,
     "Chat": Chat,
+    "Dashboard": Dashboard,
     "Leaderboard": Leaderboard,
     "MazeGame": MazeGame,
     "Profile": Profile,
@@ -68,7 +70,7 @@ export const PAGES = {
 }
 
 export const pagesConfig = {
-    mainPage: "BlastGame",
+    mainPage: "Dashboard",
     Pages: PAGES,
     Layout: __Layout,
 };
