@@ -38,6 +38,7 @@ export default function Upload() {
   const [title, setTitle] = useState("");
   const [textContent, setTextContent] = useState("");
   const [file, setFile] = useState(null);
+  const [extraImages, setExtraImages] = useState([]);
   const [extractedContent, setExtractedContent] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [difficulty, setDifficulty] = useState("medium");
@@ -287,13 +288,13 @@ Generate exactly ${count} questions now.`;
               onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
               onDragLeave={() => setDragging(false)}
               onDrop={handleDrop}
-              onClick={() => !file && document.getElementById("fileInput").click()}
+              onClick={() => document.getElementById("fileInput").click()}
               className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${
                 dragging ? "border-violet-500 bg-violet-500/10" :
                 file ? "border-violet-500/40 bg-violet-500/5 cursor-default" : "border-white/10 hover:border-violet-500/40 hover:bg-white/3"
               }`}
             >
-              <input id="fileInput" type="file" accept=".pdf,.pptx,.ppt,.png,.jpg,.jpeg" className="hidden"
+              <input id="fileInput" type="file" accept=".pdf,.pptx,.ppt,.png,.jpg,.jpeg,.txt,.docx" className="hidden"
                 onChange={e => e.target.files[0] && handleFileSelect(e.target.files[0])} />
 
               {file ? (
