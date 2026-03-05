@@ -313,7 +313,14 @@ export default function BlastGame() {
   }
 
   if (phase === "over") {
-    return <GameOverModal stats={gameStats} onRestart={() => setPhase("setup")} gameType="blast" />;
+    return (
+      <>
+        <GameOverModal stats={gameStats} onRestart={() => { setSessionId(null); setPhase("setup"); }} gameType="blast" />
+        {newAchievements.map((a, i) => (
+          <AchievementToast key={a.id || i} achievement={a} onDone={() => setNewAchievements(prev => prev.slice(1))} />
+        ))}
+      </>
+    );
   }
 
   // Render board with current piece overlay
