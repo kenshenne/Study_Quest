@@ -286,24 +286,6 @@ export default function Profile() {
           ))}
         </div>
 
-        {/* Friends List */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-          <h3 className="font-semibold mb-3">Friends ({friendProfiles.length})</h3>
-          {friendProfiles.length === 0 ? (
-            <p className="text-white/30 text-sm">No friends yet. Search for users above!</p>
-          ) : (
-            <div className="space-y-2">
-              {friendProfiles.map(f => (
-                <div key={f.id} className="flex items-center gap-3 py-2 border-t border-white/5 first:border-0">
-                  <span className="text-lg">{f.avatar || "🎓"}</span>
-                  <span className="text-sm font-medium">{f.username}</span>
-                  <span className="ml-auto text-xs text-white/30">Lv.{f.level}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* Achievements */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
           <h3 className="font-semibold mb-3 flex items-center gap-2"><Star className="w-4 h-4 text-yellow-400" /> Achievements ({achievements.length})</h3>
