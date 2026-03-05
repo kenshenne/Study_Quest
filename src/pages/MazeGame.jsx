@@ -303,7 +303,14 @@ export default function MazeGame() {
   }
 
   if (phase === "over") {
-    return <GameOverModal stats={gameStats} onRestart={() => setPhase("setup")} gameType="maze" />;
+    return (
+      <>
+        <GameOverModal stats={gameStats} onRestart={() => { setSessionId(null); setPhase("setup"); }} gameType="maze" />
+        {newAchievements.map((a, i) => (
+          <AchievementToast key={a.id || i} achievement={a} onDone={() => setNewAchievements(prev => prev.slice(1))} />
+        ))}
+      </>
+    );
   }
 
   return (
