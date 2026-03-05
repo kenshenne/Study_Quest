@@ -6,6 +6,8 @@ import { ArrowLeft, Flag } from "lucide-react";
 import QuestionModal from "../components/game/QuestionModal";
 import GameOverModal from "../components/game/GameOverModal";
 import MaterialSelector from "../components/game/MaterialSelector";
+import AchievementToast from "../components/achievements/AchievementToast";
+import { checkAndAwardAchievements } from "../components/achievements/achievementsLib";
 
 function generateGrid(cols, rows, bombCount) {
   const total = cols * rows;
@@ -44,10 +46,8 @@ function generateGrid(cols, rows, bombCount) {
 
 const LEVEL_CONFIGS = [
   { cols: 8, rows: 8, bombs: 10, label: "Level 1" },
-  { cols: 10, rows: 8, bombs: 14, label: "Level 2" },
-  { cols: 12, rows: 9, bombs: 18, label: "Level 3" },
-  { cols: 14, rows: 10, bombs: 22, label: "Level 4" },
-  { cols: 16, rows: 10, bombs: 28, label: "Level 5" }
+  { cols: 10, rows: 9, bombs: 15, label: "Level 2" },
+  { cols: 12, rows: 10, bombs: 20, label: "Level 3" }
 ];
 
 export default function BombGame() {
