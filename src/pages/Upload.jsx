@@ -313,8 +313,23 @@ Generate exactly ${count} questions now.`;
                 <>
                   <UploadIcon className="w-10 h-10 mx-auto mb-3 text-white/20" />
                   <p className="font-medium text-white/60 mb-1">Drop your file here or click to browse</p>
-                  <p className="text-xs text-white/30">Supports PDF, PowerPoint (.pptx), PNG, JPG</p>
+                  <p className="text-xs text-white/30">Supports PDF, PowerPoint, images, text files</p>
                 </>
+              )}
+              {/* Multiple images */}
+              {!file && (
+                <div className="mt-3 pt-3 border-t border-white/5">
+                  <label className="text-xs text-white/40 block mb-2">Or upload multiple images</label>
+                  <input id="multiImgInput" type="file" accept=".png,.jpg,.jpeg,.gif,.webp" multiple className="hidden"
+                    onChange={e => setExtraImages(Array.from(e.target.files))} />
+                  <button type="button" onClick={e => { e.stopPropagation(); document.getElementById("multiImgInput").click(); }}
+                    className="px-3 py-1.5 bg-white/8 hover:bg-white/12 rounded-lg text-xs text-white/60 transition-colors">
+                    Select multiple images
+                  </button>
+                  {extraImages.length > 0 && (
+                    <p className="text-xs text-emerald-400 mt-1">{extraImages.length} image(s) selected</p>
+                  )}
+                </div>
               )}
             </div>
 
