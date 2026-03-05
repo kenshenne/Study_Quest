@@ -81,14 +81,20 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
       {/* Header */}
-      <header className="border-b border-white/5 px-6 py-4 flex items-center justify-between backdrop-blur-sm bg-black/20 sticky top-0 z-10">
+      <header className="border-b border-white/5 px-4 md:px-6 py-4 flex items-center justify-between backdrop-blur-sm bg-black/20 sticky top-0 z-10">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-            <Zap className="w-5 h-5 text-white" />
+          {/* Mobile hamburger */}
+          <MobileNav unreadMessages={unreadMessages} profile={profile} />
+          {/* Logo */}
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+              <Zap className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-lg tracking-tight">Study Quest</span>
           </div>
-          <span className="font-bold text-lg tracking-tight">Study Quest</span>
         </div>
-        <nav className="flex items-center gap-1">
+        {/* Desktop nav only */}
+        <nav className="hidden md:flex items-center gap-1">
           {navLinks.map(n => (
             <Link key={n.to} to={createPageUrl(n.to)} className="relative px-3 py-2 text-sm text-white/60 hover:text-white transition-colors flex items-center gap-1.5">
               {n.icon} {n.label}
