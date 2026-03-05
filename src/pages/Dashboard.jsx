@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import { Zap, Upload, Trophy, User, BookOpen, Swords, Bomb, Layers, MessageCircle, Star, FileText } from "lucide-react";
+import MobileNav from "@/components/layout/MobileNav";
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
