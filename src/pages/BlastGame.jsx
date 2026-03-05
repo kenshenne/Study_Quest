@@ -6,6 +6,8 @@ import { ArrowLeft } from "lucide-react";
 import QuestionModal from "../components/game/QuestionModal";
 import GameOverModal from "../components/game/GameOverModal";
 import MaterialSelector from "../components/game/MaterialSelector";
+import AchievementToast from "../components/achievements/AchievementToast";
+import { checkAndAwardAchievements } from "../components/achievements/achievementsLib";
 
 const COLS = 8;
 const ROWS = 14;
@@ -81,6 +83,8 @@ export default function BlastGame() {
   const [activeQuestion, setActiveQuestion] = useState(null);
   const [pendingBoard, setPendingBoard] = useState(null);
   const [locked, setLocked] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
+  const [newAchievements, setNewAchievements] = useState([]);
   const tickRef = useRef(null);
   const boardRef = useRef(null);
 
