@@ -304,6 +304,50 @@ export default function Profile() {
           )}
         </div>
 
+        {/* Achievements */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
+          <h3 className="font-semibold mb-3 flex items-center gap-2"><Star className="w-4 h-4 text-yellow-400" /> Achievements ({achievements.length})</h3>
+          {achievements.length === 0 ? (
+            <p className="text-white/30 text-sm">No achievements yet. Play games to unlock them!</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-2">
+              {achievements.map(a => (
+                <div key={a.id} className="flex items-center gap-3 p-3 bg-yellow-500/5 border border-yellow-500/20 rounded-xl">
+                  <span className="text-2xl">{a.icon}</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold">{a.title}</p>
+                    <p className="text-xs text-white/40">{a.description}</p>
+                  </div>
+                  <span className="text-xs text-yellow-400 font-bold">+{a.xp_reward} XP</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Friends with Chat link */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold">Friends ({friendProfiles.length})</h3>
+            <Link to={createPageUrl("Chat")} className="flex items-center gap-1.5 text-xs text-violet-400 hover:text-violet-300 transition-colors">
+              <MessageCircle className="w-3.5 h-3.5" /> Open Chat
+            </Link>
+          </div>
+          {friendProfiles.length === 0 ? (
+            <p className="text-white/30 text-sm">No friends yet. Search for users above!</p>
+          ) : (
+            <div className="space-y-2">
+              {friendProfiles.map(f => (
+                <div key={f.id} className="flex items-center gap-3 py-2 border-t border-white/5 first:border-0">
+                  <span className="text-lg">{f.avatar || "🎓"}</span>
+                  <span className="text-sm font-medium">{f.username}</span>
+                  <span className="ml-auto text-xs text-white/30">Lv.{f.level}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Game History */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
           <h3 className="font-semibold mb-3">Game History</h3>
@@ -311,18 +355,63 @@ export default function Profile() {
             <p className="text-white/30 text-sm">No games played yet.</p>
           ) : (
             <div className="space-y-2">
-              {sessions.map(s => (
-                <div key={s.id} className="flex items-center justify-between py-2 border-t border-white/5 first:border-0">
-                  <div>
-                    <p className="text-sm font-medium">{gameLabels[s.game_type]}</p>
-                    <p className="text-xs text-white/40">{s.correct_answers}/{s.total_questions} correct · {s.difficulty}</p>
+              {sessions.map(s => {
+                const accuracy = s.total_questions > 0 ? Math.round((s.correct_answers / s.total_questions) * 100) : 0;
+                const isExpanded = expandedSession === s.id;
+                return (
+                  <div key={s.id} className="border-t border-white/5 first:border-0">
+                    <button
+                      onClick={() => setExpandedSession(isExpanded ? null : s.id)}
+                      className="w-full flex items-center justify-between py-2 text-left hover:bg-white/3 rounded-lg px-2 -mx-2 transition-colors"
+                    >
+                      <div>
+                        <p className="text-sm font-medium flex items-center gap-2">
+                          {gameLabels[s.game_type]}
+                          {!s.completed && <span className="text-xs text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded">incomplete</span>}
+                        </p>
+                        <p className="text-xs text-white/40">{s.correct_answers}/{s.total_questions} correct · {accuracy}% · {s.difficulty}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <p className="text-sm text-violet-400">+{s.xp_earned} XP</p>
+                          <p className="text-xs text-white/30">{new Date(s.created_date).toLocaleDateString()}</p>
+                        </div>
+                        {isExpanded ? <ChevronUp className="w-4 h-4 text-white/30" /> : <ChevronDown className="w-4 h-4 text-white/30" />}
+                      </div>
+                    </button>
+                    {isExpanded && (
+                      <div className="ml-2 mt-1 mb-2 space-y-2">
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          <div className="bg-emerald-500/10 rounded-lg p-2">
+                            <p className="text-sm font-bold text-emerald-400">{s.correct_answers}</p>
+                            <p className="text-xs text-white/40">Correct</p>
+                          </div>
+                          <div className="bg-rose-500/10 rounded-lg p-2">
+                            <p className="text-sm font-bold text-rose-400">{s.incorrect_answers}</p>
+                            <p className="text-xs text-white/40">Incorrect</p>
+                          </div>
+                          <div className="bg-violet-500/10 rounded-lg p-2">
+                            <p className="text-sm font-bold text-violet-400">{accuracy}%</p>
+                            <p className="text-xs text-white/40">Accuracy</p>
+                          </div>
+                        </div>
+                        {s.mistakes_review?.length > 0 && (
+                          <div className="space-y-1">
+                            <p className="text-xs text-white/50 font-semibold">Incorrect answers:</p>
+                            {s.mistakes_review.map((m, i) => (
+                              <div key={i} className="bg-rose-500/5 border border-rose-500/20 rounded-lg p-2">
+                                <p className="text-xs text-white/80">{m.question}</p>
+                                <p className="text-xs text-emerald-400 mt-0.5">Correct: {m.correct}</p>
+                                {m.explanation && <p className="text-xs text-white/40 mt-0.5">{m.explanation}</p>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm text-violet-400">+{s.xp_earned} XP</p>
-                    <p className="text-xs text-white/40">{new Date(s.created_date).toLocaleDateString()}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
