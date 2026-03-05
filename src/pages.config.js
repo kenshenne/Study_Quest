@@ -47,24 +47,26 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import BlastGame from './pages/BlastGame';
+import BombGame from './pages/BombGame';
 import Dashboard from './pages/Dashboard';
-import Upload from './pages/Upload';
-import Profile from './pages/Profile';
 import Leaderboard from './pages/Leaderboard';
 import MazeGame from './pages/MazeGame';
-import BombGame from './pages/BombGame';
-import BlastGame from './pages/BlastGame';
+import Profile from './pages/Profile';
+import Upload from './pages/Upload';
+import Chat from './pages/Chat';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "BlastGame": BlastGame,
+    "BombGame": BombGame,
     "Dashboard": Dashboard,
-    "Upload": Upload,
-    "Profile": Profile,
     "Leaderboard": Leaderboard,
     "MazeGame": MazeGame,
-    "BombGame": BombGame,
-    "BlastGame": BlastGame,
+    "Profile": Profile,
+    "Upload": Upload,
+    "Chat": Chat,
 }
 
 export const pagesConfig = {
