@@ -118,6 +118,16 @@ export default function MazeGame() {
     setQIndex(0);
     setGameStats({ correct: 0, incorrect: 0, total: 0, xp: 0, mistakes: [] });
     setStartTime(Date.now());
+    // Create session immediately for partial-game saving
+    try {
+      const s = await base44.entities.GameSession.create({
+        user_id: user.email, username: profile?.username || user.email,
+        game_type: "maze", difficulty, material_id: matId,
+        score: 0, xp_earned: 0, total_questions: 0,
+        correct_answers: 0, incorrect_answers: 0, completed: false
+      });
+      setSessionId(s.id);
+    } catch {}
     setPhase("playing");
     setTimeout(() => gameRef.current?.focus(), 100);
   };
