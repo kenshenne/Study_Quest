@@ -10,6 +10,8 @@ export default function Profile() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [sessions, setSessions] = useState([]);
+  const [achievements, setAchievements] = useState([]);
+  const [expandedSession, setExpandedSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [username, setUsername] = useState("");
