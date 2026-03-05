@@ -16,8 +16,11 @@ export default function Leaderboard() {
 
   useEffect(() => {
     init();
-    const interval = setInterval(loadData, 10000);
-    return () => clearInterval(interval);
+    // Poll every 15s and also subscribe to real-time changes
+    const interval = setInterval(loadData, 15000);
+    const unsubProfile = base44.entities.UserProfile.subscribe(() => loadData());
+    const unsubSession = base44.entities.GameSession.subscribe(() => loadData());
+    return () => { clearInterval(interval); unsubProfile(); unsubSession(); };
   }, []);
 
   const init = async () => {
@@ -35,19 +38,19 @@ export default function Leaderboard() {
   };
 
   const loadData = async () => {
-    const [allP, allS] = await Promise.all([
+    const [allP, allS, onlineStatuses] = await Promise.all([
       base44.entities.UserProfile.list("-xp", 50),
-      base44.entities.GameSession.list("-created_date", 200)
+      base44.entities.GameSession.list("-created_date", 200),
+      base44.entities.OnlineStatus.filter({ is_online: true })
     ]);
     setAllProfiles(allP);
     setSessions(allS);
-    // Count recently active users (last 5 mins = recent sessions)
-    const recent = allS.filter(s => {
-      const diff = Date.now() - new Date(s.created_date).getTime();
-      return diff < 5 * 60 * 1000;
+    // Active = users with is_online=true and last_seen within 3 mins
+    const now = Date.now();
+    const active = onlineStatuses.filter(s => {
+      return now - new Date(s.last_seen).getTime() < 3 * 60 * 1000;
     });
-    const uniqueUsers = new Set(recent.map(s => s.user_id));
-    setActiveCount(uniqueUsers.size);
+    setActiveCount(active.length);
   };
 
   if (loading) return <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center text-white animate-pulse">Loading...</div>;
