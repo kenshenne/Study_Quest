@@ -93,17 +93,7 @@ export default function Dashboard() {
             <span className="font-bold text-lg tracking-tight">Study Quest</span>
           </div>
         </div>
-        {/* Desktop nav only */}
-        <nav className="hidden md:flex items-center gap-1">
-          {navLinks.map(n => (
-            <Link key={n.to} to={createPageUrl(n.to)} className="relative px-3 py-2 text-sm text-white/60 hover:text-white transition-colors flex items-center gap-1.5">
-              {n.icon} {n.label}
-              {n.badge > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 bg-rose-500 text-white text-[10px] rounded-full flex items-center justify-center">{n.badge}</span>
-              )}
-            </Link>
-          ))}
-        </nav>
+
       </header>
 
       <main className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-10">

@@ -50,11 +50,11 @@
 import BlastGame from './pages/BlastGame';
 import BombGame from './pages/BombGame';
 import Chat from './pages/Chat';
-import Dashboard from './pages/Dashboard';
 import Leaderboard from './pages/Leaderboard';
 import MazeGame from './pages/MazeGame';
 import Profile from './pages/Profile';
 import Upload from './pages/Upload';
+import Dashboard from './pages/Dashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -62,11 +62,11 @@ export const PAGES = {
     "BlastGame": BlastGame,
     "BombGame": BombGame,
     "Chat": Chat,
-    "Dashboard": Dashboard,
     "Leaderboard": Leaderboard,
     "MazeGame": MazeGame,
     "Profile": Profile,
     "Upload": Upload,
+    "Dashboard": Dashboard,
 }
 
 export const pagesConfig = {
