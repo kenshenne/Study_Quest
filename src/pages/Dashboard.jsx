@@ -125,7 +125,7 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-10">
+        <div className="grid grid-cols-3 gap-3 md:gap-4 mb-8 md:mb-10">
           {[
             { label: "Questions Answered", value: profile?.total_questions_answered || 0, icon: "📝" },
             { label: "Accuracy Rate", value: `${Math.round(profile?.accuracy_rate || 0)}%`, icon: "🎯" },
