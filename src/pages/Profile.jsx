@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
-import { ArrowLeft, UserPlus, Search, Check, X, LogOut } from "lucide-react";
+import { ArrowLeft, UserPlus, Search, Check, X, LogOut, ChevronDown, ChevronUp, Star, MessageCircle } from "lucide-react";
 
 const AVATARS = ["🎓", "🦁", "🐯", "🦊", "🐼", "🐸", "🦄", "🐉", "🤖", "👾", "🎮", "⚡", "🔥", "💎", "🌟"];
 
