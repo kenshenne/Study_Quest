@@ -112,6 +112,24 @@ export default function Upload() {
           setExtractedContent(content);
         }
         setProgressPct(45);
+      } else if (extraImages.length > 0) {
+        setProgressStep("Extracting text from images...");
+        setProgressPct(15);
+        const allTexts = [];
+        for (let i = 0; i < extraImages.length; i++) {
+          const { file_url } = await base44.integrations.Core.UploadFile({ file: extraImages[i] });
+          const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+            file_url,
+            json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
+          });
+          if (result.status === "success" && result.output?.text) allTexts.push(result.output.text);
+          setProgressPct(15 + Math.round(((i + 1) / extraImages.length) * 25));
+        }
+        if (allTexts.length > 0) {
+          content = allTexts.join("\n\n---\n\n");
+          setExtractedContent(content);
+        }
+        setProgressPct(45);
       }
 
       setProgressStep("Saving material...");
