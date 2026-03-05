@@ -248,31 +248,28 @@ export default function BlastGame() {
   const endGame = async (finalStats = gameStats) => {
     clearInterval(tickRef.current);
     try {
-      await base44.entities.GameSession.create({
-        user_id: user.email,
-        username: profile?.username || user.email,
-        game_type: "blast",
-        difficulty,
-        material_id: materialId,
-        score: score,
-        xp_earned: finalStats.xp,
-        total_questions: finalStats.total,
-        correct_answers: finalStats.correct,
-        incorrect_answers: finalStats.incorrect,
-        completed: true,
-        mistakes_review: finalStats.mistakes
-      });
+      const sessionData = {
+        score, xp_earned: finalStats.xp, total_questions: finalStats.total,
+        correct_answers: finalStats.correct, incorrect_answers: finalStats.incorrect,
+        completed: true, mistakes_review: finalStats.mistakes
+      };
+      if (sessionId) {
+        await base44.entities.GameSession.update(sessionId, sessionData);
+      } else {
+        await base44.entities.GameSession.create({ user_id: user.email, username: profile?.username || user.email, game_type: "blast", difficulty, material_id: materialId, ...sessionData });
+      }
       if (profile) {
         const newXP = (profile.xp || 0) + finalStats.xp;
         const newTotal = (profile.total_questions_answered || 0) + finalStats.total;
         const newCorrect = (profile.total_correct || 0) + finalStats.correct;
-        await base44.entities.UserProfile.update(profile.id, {
-          xp: newXP,
-          level: Math.floor(newXP / 200) + 1,
-          total_questions_answered: newTotal,
-          total_correct: newCorrect,
+        const updatedProfile = await base44.entities.UserProfile.update(profile.id, {
+          xp: newXP, level: Math.floor(newXP / 200) + 1,
+          total_questions_answered: newTotal, total_correct: newCorrect,
           accuracy_rate: newTotal > 0 ? (newCorrect / newTotal) * 100 : 0
         });
+        const allSessions = await base44.entities.GameSession.filter({ user_id: user.email }, "-created_date", 100);
+        const earned = await checkAndAwardAchievements(user.email, { ...updatedProfile, accuracy_rate: newTotal > 0 ? (newCorrect / newTotal) * 100 : 0 }, { ...finalStats, game_type: "blast" }, allSessions);
+        if (earned.length > 0) setNewAchievements(earned);
       }
     } catch (e) { console.error(e); }
     setGameStats(finalStats);
