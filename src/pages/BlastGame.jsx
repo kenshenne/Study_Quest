@@ -111,6 +111,15 @@ export default function BlastGame() {
     setLives(3);
     setGameStats({ correct: 0, incorrect: 0, total: 0, xp: 0, mistakes: [] });
     setLocked(false);
+    try {
+      const s = await base44.entities.GameSession.create({
+        user_id: user.email, username: profile?.username || user.email,
+        game_type: "blast", difficulty, material_id: matId,
+        score: 0, xp_earned: 0, total_questions: 0,
+        correct_answers: 0, incorrect_answers: 0, completed: false
+      });
+      setSessionId(s.id);
+    } catch {}
     setPhase("playing");
     setTimeout(() => boardRef.current?.focus(), 100);
   };
