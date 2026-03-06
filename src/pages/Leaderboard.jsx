@@ -80,14 +80,12 @@ export default function Leaderboard() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
-      <header className="border-b border-white/5 px-6 py-4 flex items-center gap-4">
-        <Link to={createPageUrl("Dashboard")} className="text-white/40 hover:text-white transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <h1 className="text-xl font-bold flex items-center gap-2"><Trophy className="w-5 h-5 text-yellow-400" /> Leaderboard</h1>
+      <header className="border-b border-white/5 px-4 py-3 flex items-center gap-3 sticky top-0 bg-[#0a0a0f] z-10">
+        <MobileNav profile={null} />
+        <h1 className="text-lg font-bold flex items-center gap-2"><Trophy className="w-5 h-5 text-yellow-400" /> Leaderboard</h1>
         <div className="ml-auto flex items-center gap-2 text-xs text-white/40">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block" />
-          {activeCount} active now · {allProfiles.length} players
+          {activeCount} active
         </div>
       </header>
 
