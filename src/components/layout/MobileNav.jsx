@@ -94,8 +94,8 @@ export default function MobileNav({ unreadMessages = 0, profile }) {
                 to={createPageUrl(item.to)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium ${
                   isActive
-                    ? "bg-violet-600/20 text-violet-300 border border-violet-500/20"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
+                    ? "bg-violet-600/30 text-violet-200 border border-violet-500/30"
+                    : "text-white/80 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <span className={isActive ? "text-violet-400" : ""}>{item.icon}</span>
