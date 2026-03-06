@@ -425,8 +425,8 @@ export default function BlastGame() {
         </div>
       </div>
 
-      {/* Mobile Controls */}
-      <div className="flex flex-col items-center gap-1 p-3 md:hidden">
+      {/* Controls */}
+      <div className="flex flex-col items-center gap-1 p-3 md:hidden md:flex">
         <button onTouchStart={rotatePiece} className="w-12 h-12 bg-white/10 rounded-xl text-lg">↑</button>
         <div className="flex gap-1">
           <button onTouchStart={() => movePiece(-1, 0)} className="w-12 h-12 bg-white/10 rounded-xl text-lg">←</button>

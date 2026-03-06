@@ -374,8 +374,8 @@ export default function MazeGame() {
         </div>
       </div>
 
-      {/* Mobile Controls */}
-      <div className="flex flex-col items-center gap-1 p-4 md:hidden">
+      {/* D-Pad Controls */}
+      <div className="flex flex-col items-center gap-1 p-4">
         {[
           { key: "ArrowUp", label: "↑" },
         ].map(({ key, label }) => (
