@@ -294,9 +294,9 @@ export default function BlastGame() {
   if (phase === "setup") {
     return (
       <div className="min-h-screen bg-[#0a0a0f] text-white">
-        <header className="border-b border-white/5 px-6 py-4 flex items-center gap-4">
-          <Link to={createPageUrl("Dashboard")} className="text-white/40 hover:text-white"><ArrowLeft className="w-5 h-5" /></Link>
-          <h1 className="text-xl font-bold">Block Blast</h1>
+        <header className="border-b border-white/5 px-4 py-3 flex items-center gap-3">
+          <MobileNav profile={null} />
+          <h1 className="text-lg font-bold">Block Blast</h1>
         </header>
         <main className="max-w-md mx-auto px-6 py-10">
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
