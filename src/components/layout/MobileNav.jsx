@@ -98,7 +98,7 @@ export default function MobileNav({ unreadMessages = 0, profile }) {
                     : "text-white hover:text-white hover:bg-white/10"
                 }`}
               >
-                <span className={isActive ? "text-violet-400" : ""}>{item.icon}</span>
+                <span className={isActive ? "text-violet-400" : "text-white/70"}>{item.icon}</span>
                 <span>{item.label}</span>
                 {isChatWithBadge && (
                   <span className="ml-auto w-5 h-5 bg-rose-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
