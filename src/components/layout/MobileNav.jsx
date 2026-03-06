@@ -48,7 +48,7 @@ export default function MobileNav({ unreadMessages = 0, profile }) {
 
       {/* Slide-out Panel */}
       <div
-        className={`fixed top-0 left-0 h-full w-72 z-50 bg-[#0f0f1a] border-r border-white/10 shadow-2xl transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full w-72 z-50 bg-[#111118] border-r border-white/15 shadow-2xl transform transition-transform duration-300 ease-in-out ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
