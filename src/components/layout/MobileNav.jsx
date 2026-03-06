@@ -31,7 +31,7 @@ export default function MobileNav({ unreadMessages = 0, profile }) {
       {/* Hamburger Button */}
       <button
         onClick={() => setOpen(true)}
-        className="p-2 rounded-xl text-white bg-violet-700 hover:bg-violet-600 transition-colors"
+        className="p-2 rounded-xl text-white bg-white/10 hover:bg-white/20 transition-colors"
         aria-label="Open menu"
       >
         <Menu className="w-6 h-6 text-white" />

@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { ArrowLeft, Send, MessageCircle, Smile, Check, CheckCheck } from "lucide-react";
 import MobileNav from "@/components/layout/MobileNav";
 
-const EMOJI_LIST = ["😀","😂","😍","🥰","😎","😭","😅","🤔","😱","🥳","👍","❤️","🔥","💯","🎉","😤","🙏","💀","✨","😩","🫡","😋","🤩","😏","😴","🤣","😬","🥺","😡","🤯","😮","😢","👎"];
+const EMOJI_LIST = ["😀","😂","😍","🥰","😎","😭","😅","🤔","😱","🥳","👍","❤️","🔥","💯","🎉","😤","🙏","💀","✨","😩","🫡","😋","🤩","😏","😴","🤣","😬","🥺","😡","🤯","behh","asa","😭😭","haha","lol","😮","😢","❤️","😡","👎"];
 const REACTIONS = ["👍","❤️","😂","😮","😢","😡"];
 
 export default function Chat() {
