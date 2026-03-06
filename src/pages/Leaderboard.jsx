@@ -89,7 +89,7 @@ export default function Leaderboard() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-8">
+      <main className="max-w-2xl mx-auto px-4 py-6">
         {/* Filters */}
         <div className="flex gap-3 mb-6 flex-wrap">
           <div className="flex bg-white/5 rounded-xl p-1 gap-1">

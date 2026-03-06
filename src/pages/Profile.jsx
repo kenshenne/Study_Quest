@@ -155,7 +155,7 @@ export default function Profile() {
         </button>
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-10 space-y-8">
+      <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Profile Card */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
           <div className="flex items-start justify-between mb-6">
