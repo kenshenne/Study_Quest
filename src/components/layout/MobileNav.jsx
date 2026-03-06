@@ -70,7 +70,7 @@ export default function MobileNav({ unreadMessages = 0, profile }) {
 
         {/* User Info */}
         {profile && (
-          <div className="px-5 py-4 border-b border-white/5">
+          <div className="px-5 py-4 border-b border-white/10 bg-[#0d0d14]">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-600/20 border border-violet-500/30 flex items-center justify-center text-xl">
                 {profile.avatar || "🎓"}
