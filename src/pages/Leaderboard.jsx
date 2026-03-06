@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Trophy, Users, Globe, Crown } from "lucide-react";
+import MobileNav from "@/components/layout/MobileNav";
 
 export default function Leaderboard() {
   const [user, setUser] = useState(null);
