@@ -144,18 +144,14 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
-      <header className="border-b border-white/5 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link to={createPageUrl("Dashboard")} className="text-white/40 hover:text-white transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <h1 className="text-xl font-bold">Profile</h1>
-        </div>
+      <header className="border-b border-white/5 px-4 py-3 flex items-center gap-3 sticky top-0 bg-[#0a0a0f] z-10">
+        <MobileNav profile={profile} />
+        <h1 className="text-lg font-bold flex-1">Profile</h1>
         <button
           onClick={() => base44.auth.logout(createPageUrl("Dashboard"))}
           className="flex items-center gap-2 text-sm text-white/40 hover:text-white/80 transition-colors"
         >
-          <LogOut className="w-4 h-4" /> Sign Out
+          <LogOut className="w-4 h-4" />
         </button>
       </header>
 
