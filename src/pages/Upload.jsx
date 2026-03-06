@@ -267,11 +267,9 @@ Generate exactly ${count} questions now.`;
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
-      <header className="border-b border-white/5 px-6 py-4 flex items-center gap-4 sticky top-0 bg-[#0a0a0f]/90 backdrop-blur-sm z-10">
-        <Link to={createPageUrl("Dashboard")} className="text-white/40 hover:text-white transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <h1 className="text-xl font-bold">Upload Study Materials</h1>
+      <header className="border-b border-white/5 px-4 py-3 flex items-center gap-3 sticky top-0 bg-[#0a0a0f]/90 backdrop-blur-sm z-10">
+        <MobileNav profile={null} />
+        <h1 className="text-lg font-bold">Upload Materials</h1>
       </header>
 
       <main className="max-w-2xl mx-auto px-6 py-10">
