@@ -86,16 +86,16 @@ export default function MobileNav({ unreadMessages = 0, profile }) {
         {/* Nav Items */}
         <nav className="px-3 py-4 space-y-1">
           {NAV_ITEMS.map((item) => {
-            const isActive = location.pathname.includes(item.to);
+            const isActive = location.pathname === "/" + item.to || location.pathname.endsWith("/" + item.to);
             const isChatWithBadge = item.to === "Chat" && unreadMessages > 0;
             return (
               <Link
-                key={item.to}
+                key={item.label}
                 to={createPageUrl(item.to)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium ${
                   isActive
                     ? "bg-violet-600/30 text-violet-200 border border-violet-500/30"
-                    : "text-white/80 hover:text-white hover:bg-white/10"
+                    : "text-white hover:text-white hover:bg-white/10"
                 }`}
               >
                 <span className={isActive ? "text-violet-400" : ""}>{item.icon}</span>
