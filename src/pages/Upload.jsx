@@ -6,6 +6,7 @@ import {
   Upload as UploadIcon, FileText, ArrowLeft, CheckCircle,
   Loader2, Trash2, X, BookOpen, Zap, ChevronRight, Eye, EyeOff, RefreshCw
 } from "lucide-react";
+import MobileNav from "@/components/layout/MobileNav";
 
 const STEPS = ["Upload", "Configure", "Generate"];
 
