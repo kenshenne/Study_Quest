@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Flag } from "lucide-react";
+import MobileNav from "@/components/layout/MobileNav";
 import QuestionModal from "../components/game/QuestionModal";
 import GameOverModal from "../components/game/GameOverModal";
 import MaterialSelector from "../components/game/MaterialSelector";
