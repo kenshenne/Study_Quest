@@ -141,49 +141,38 @@ export default function Upload() {
       setProgressStep("Analyzing content & generating questions...");
       setProgressPct(60);
 
-      const count = DIFFICULTY_INFO[difficulty].count;
-      const difficultyInstructions = {
-        easy: `QUESTION TYPES: Multiple choice ONLY (4 options each).
-- Test basic recall and recognition of key facts from the material.
-- Options: 1 clearly correct answer + 3 plausible but wrong distractors.
-- Questions should be straightforward and unambiguous.
-- HINT: Give a vague category clue (e.g. "Think about what happens at the start of the process") — never reveal the answer.`,
-        medium: `QUESTION TYPES: Mix of multiple choice (4 options) AND enumeration.
-- Multiple choice (~60%): Test understanding and application of concepts.
-- Enumeration (~40%): Ask students to list steps, components, or examples. Correct answer = comma-separated key terms.
-- Questions should require understanding, not just memorization.
-- HINT: Give a structural clue (e.g. "There are 3 parts" or "Consider the relationship between X and Y") — do NOT reveal the answer.`,
-        hard: `QUESTION TYPES: Mix of multiple choice (4 options), enumeration, AND fill-in-the-blank.
-- Multiple choice (~40%): Test deep analysis and nuanced understanding.
-- Enumeration (~30%): Require precise recall of lists.
-- Fill-in-the-blank (~30%): Remove a key term from a real sentence in the material. Use ___ for the blank. Correct answer = exact missing word/phrase.
-- Questions should challenge critical thinking and precise recall.
-- NO HINTS — set hint to "".`
-      };
+      const count = QUESTION_COUNT;
 
       const prompt = `You are an expert educational question generator for a gamified learning app. Create high-quality study questions STRICTLY based on the provided material.
+
+This material may have been extracted from a PDF, PowerPoint presentation, or images. Extract all meaningful content including slide titles, bullet points, diagrams descriptions, and notes.
 
 ═══════════════════════════════════
 STUDY MATERIAL:
 ═══════════════════════════════════
-${content.slice(0, 10000)}
+${content.slice(0, 12000)}
 ═══════════════════════════════════
 
-TASK: Generate exactly ${count} questions at difficulty: "${difficulty.toUpperCase()}"
+TASK: Generate exactly ${count} questions with a MIX of all three difficulty levels.
 
-${difficultyInstructions[difficulty]}
+DIFFICULTY DISTRIBUTION:
+- easy (~35%): Multiple choice ONLY (4 options). Test basic recall. Include a helpful hint.
+- medium (~40%): Mix of multiple choice and enumeration. Test understanding. Include a structural hint.
+- hard (~25%): Mix of multiple choice, enumeration, AND fill-in-the-blank. Test deep analysis. NO hints (set hint to "").
+
+QUESTION TYPE RULES:
+- multiple_choice: exactly 4 options (1 correct + 3 plausible distractors). Shuffle correct answer position randomly.
+- enumeration: empty "options" array []. correct_answer = comma-separated key terms in order.
+- fill_blank: empty "options" array []. question_text must contain ___ for the blank. correct_answer = exact missing word/phrase.
 
 GLOBAL RULES:
 1. Every question must be directly answerable from the material above. NO external knowledge.
-2. Cover a WIDE variety of topics — do not repeat the same concept twice.
-3. Each question must be unique and test a different piece of knowledge.
-4. Explanations: 1-2 sentences explaining WHY the answer is correct, citing the material.
-5. multiple_choice: exactly 4 options in the "options" array.
-6. enumeration: empty "options" array []. correct_answer = comma-separated key terms.
-7. fill_blank: empty "options" array []. question_text must contain ___ for the blank.
-8. "topic" = short 2-4 word label (e.g. "Cell Division", "World War II Causes").
-9. Never generate trick questions or questions with ambiguous answers.
-10. Shuffle the correct answer position in multiple choice options randomly.
+2. Cover a WIDE variety of topics — spread questions across the entire material.
+3. Each question must be unique — never repeat the same concept.
+4. Explanations: 1-2 sentences explaining WHY the answer is correct.
+5. "topic" = short 2-4 word label (e.g. "Cell Division", "Chapter 3 Concepts").
+6. "difficulty" field must be "easy", "medium", or "hard" for each question.
+7. Never generate trick questions or ambiguous answers.
 
 Generate exactly ${count} questions now.`;
 
