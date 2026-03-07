@@ -102,13 +102,13 @@ export default function MazeGame() {
   };
 
   const startGame = async (matId) => {
-    const qs = await base44.entities.Question.filter({ material_id: matId, user_id: user.email, difficulty });
+    const qs = await base44.entities.Question.filter({ material_id: matId, user_id: user.email });
     if (qs.length === 0) {
-      alert("No questions found for this material and difficulty. Please upload materials first.");
+      alert("No questions found for this material. Please upload materials first.");
       return;
     }
     const shuffled = [...qs].sort(() => Math.random() - 0.5);
-    const limited = shuffled.slice(0, Math.min(shuffled.length, difficulty === "easy" ? 15 : difficulty === "medium" ? 25 : 35));
+    const limited = shuffled.slice(0, Math.min(shuffled.length, 15));
     setQuestions(limited);
     const newMaze = generateMaze(COLS, ROWS);
     const cps = placeCheckpoints(newMaze, limited);
