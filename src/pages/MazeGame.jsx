@@ -102,12 +102,15 @@ export default function MazeGame() {
   };
 
   const startGame = async (matId) => {
-    const qs = await base44.entities.Question.filter({ material_id: matId, user_id: user.email });
-    if (qs.length === 0) {
+    const allQs = await base44.entities.Question.filter({ material_id: matId, user_id: user.email });
+    if (allQs.length === 0) {
       alert("No questions found for this material. Please upload materials first.");
       return;
     }
-    const shuffled = [...qs].sort(() => Math.random() - 0.5);
+    // Filter by difficulty — fallback to all if not enough
+    const diffQs = allQs.filter(q => q.difficulty === difficulty);
+    const pool = diffQs.length >= 8 ? diffQs : allQs;
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
     const limited = shuffled.slice(0, Math.min(shuffled.length, 15));
     setQuestions(limited);
     const newMaze = generateMaze(COLS, ROWS);
