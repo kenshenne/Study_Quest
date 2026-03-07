@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Menu, X, Zap, LayoutDashboard, Upload, Swords, Trophy, User, MessageCircle } from "lucide-react";
