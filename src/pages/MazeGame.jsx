@@ -330,8 +330,8 @@ export default function MazeGame() {
         </div>
       </header>
 
-      <div className="flex-1 flex items-center justify-center p-4" ref={gameRef} tabIndex={0} style={{ outline: "none" }}>
-        <div className="relative">
+      <div className="flex-1 overflow-auto p-2 md:p-4" ref={gameRef} tabIndex={0} style={{ outline: "none" }}>
+        <div className="relative mx-auto" style={{ width: canvasW, minWidth: canvasW }}>
           <svg width={canvasW} height={canvasH} style={{ display: "block", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12 }}>
             <rect width={canvasW} height={canvasH} fill="#0d0d18" rx={12} />
             {/* Exit marker */}
