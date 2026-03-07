@@ -38,7 +38,7 @@ export default function Upload() {
   const [extraImages, setExtraImages] = useState([]);
   const [extractedContent, setExtractedContent] = useState("");
   const [showPreview, setShowPreview] = useState(false);
-  const [difficulty, setDifficulty] = useState("medium");
+  // difficulty removed — now chosen per game session
 
   // Progress
   const [progressStep, setProgressStep] = useState(""); // current generation step label
