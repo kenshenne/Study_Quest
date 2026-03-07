@@ -96,7 +96,7 @@ export default function MobileNav({ unreadMessages = 0, profile }) {
                   <Link
                     key={item.label}
                     to={createPageUrl(item.to)}
-                    onPointerDown={() => setOpen(false)}
+                    onClick={() => setOpen(false)}
                     style={{
                       display: "flex", alignItems: "center", gap: 12,
                       padding: "12px 16px", borderRadius: 12, marginBottom: 4,
