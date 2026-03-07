@@ -171,7 +171,7 @@ export default function Chat() {
     if (!newMsg.trim() || !selectedFriend || sending) return;
     setSending(true);
     const friendOnline = onlineStatuses[selectedFriend.user_id] === "online";
-    const msg = await base44.entities.ChatMessage.create({
+    await base44.entities.ChatMessage.create({
       from_user_id: user.email,
       to_user_id: selectedFriend.user_id,
       from_username: profile?.username || user.email,
@@ -181,7 +181,7 @@ export default function Chat() {
       delivered: friendOnline,
       read: false
     });
-    setMessages(prev => [...prev, msg]);
+    // Don't optimistically add — the subscription will handle it
     setNewMsg("");
     setSending(false);
     setShowEmojiPicker(false);
