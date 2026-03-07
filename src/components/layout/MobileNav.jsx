@@ -37,50 +37,58 @@ export default function MobileNav({ unreadMessages = 0, profile }) {
         <Menu className="w-6 h-6 text-white" />
       </button>
 
-      {/* Full-screen portal for menu */}
-      {open && (
-        <div className="fixed inset-0 z-[9999] flex" style={{ isolation: "isolate" }}>
+      {/* Render menu via portal so it's never clipped by parent containers */}
+      {open && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 99999, display: "flex" }}>
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/80"
+            style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.85)" }}
             onPointerDown={() => setOpen(false)}
           />
 
-          {/* Slide-out Panel — fully opaque, no transparency */}
-          <div className="relative z-10 flex flex-col w-72 h-full bg-[#0d0d14] border-r-2 border-violet-900/40 shadow-2xl overflow-y-auto">
-            {/* Panel Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-[#0a0a12] shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                  <Zap className="w-4 h-4 text-white" />
+          {/* Slide-out Panel */}
+          <div style={{
+            position: "relative", zIndex: 1,
+            display: "flex", flexDirection: "column",
+            width: 288, height: "100%",
+            background: "#0d0d14",
+            borderRight: "2px solid rgba(109,40,217,0.3)",
+            boxShadow: "4px 0 24px rgba(0,0,0,0.8)",
+            overflowY: "auto"
+          }}>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "#0a0a12", flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 10, background: "linear-gradient(135deg, #8b5cf6, #7c3aed)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Zap style={{ width: 16, height: 16, color: "white" }} />
                 </div>
-                <span className="font-bold text-white text-base tracking-tight">Study Quest</span>
+                <span style={{ fontWeight: 700, color: "white", fontSize: 15, letterSpacing: "-0.3px" }}>Study Quest</span>
               </div>
               <button
-                onPointerDown={() => setOpen(false)}
-                className="p-2 rounded-xl text-white/60 hover:text-white bg-white/5 hover:bg-white/15 transition-colors touch-manipulation"
+                onPointerDown={(e) => { e.stopPropagation(); setOpen(false); }}
+                style={{ padding: "8px", borderRadius: 10, background: "rgba(255,255,255,0.06)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", touchAction: "manipulation" }}
               >
-                <X className="w-5 h-5" />
+                <X style={{ width: 20, height: 20, color: "rgba(255,255,255,0.7)" }} />
               </button>
             </div>
 
             {/* User Info */}
             {profile && (
-              <div className="px-5 py-4 border-b border-white/10 bg-[#0a0a12] shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-600/20 border border-violet-500/30 flex items-center justify-center text-xl">
+              <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "#0a0a12", flexShrink: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
                     {profile.avatar || "🎓"}
                   </div>
                   <div>
-                    <p className="font-semibold text-sm text-white">{profile.username}</p>
-                    <p className="text-xs text-white/50">Level {profile.level} · {profile.xp} XP</p>
+                    <p style={{ fontWeight: 600, fontSize: 14, color: "white", margin: 0 }}>{profile.username}</p>
+                    <p style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", margin: 0 }}>Level {profile.level} · {profile.xp} XP</p>
                   </div>
                 </div>
               </div>
             )}
 
             {/* Nav Items */}
-            <nav className="px-3 py-4 space-y-1 flex-1">
+            <nav style={{ padding: "12px", flex: 1 }}>
               {NAV_ITEMS.map((item) => {
                 const isActive = location.pathname === "/" + item.to || location.pathname.endsWith("/" + item.to);
                 const isChatWithBadge = item.to === "Chat" && unreadMessages > 0;
@@ -88,16 +96,22 @@ export default function MobileNav({ unreadMessages = 0, profile }) {
                   <Link
                     key={item.label}
                     to={createPageUrl(item.to)}
-                    className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all text-sm font-medium touch-manipulation ${
-                      isActive
-                        ? "bg-violet-600/25 text-white border border-violet-500/40"
-                        : "text-white hover:bg-white/10 border border-transparent"
-                    }`}
+                    onPointerDown={() => setOpen(false)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 12,
+                      padding: "12px 16px", borderRadius: 12, marginBottom: 4,
+                      textDecoration: "none", fontSize: 14, fontWeight: 500,
+                      touchAction: "manipulation",
+                      color: "white",
+                      background: isActive ? "rgba(139,92,246,0.2)" : "transparent",
+                      border: isActive ? "1px solid rgba(139,92,246,0.35)" : "1px solid transparent",
+                      transition: "background 0.15s"
+                    }}
                   >
-                    <span className={isActive ? "text-violet-400" : "text-white/60"}>{item.icon}</span>
+                    <span style={{ color: isActive ? "#a78bfa" : "rgba(255,255,255,0.55)", display: "flex" }}>{item.icon}</span>
                     <span>{item.label}</span>
                     {isChatWithBadge && (
-                      <span className="ml-auto w-5 h-5 bg-rose-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
+                      <span style={{ marginLeft: "auto", width: 20, height: 20, background: "#ef4444", color: "white", fontSize: 10, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>
                         {unreadMessages > 9 ? "9+" : unreadMessages}
                       </span>
                     )}
@@ -106,7 +120,8 @@ export default function MobileNav({ unreadMessages = 0, profile }) {
               })}
             </nav>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
