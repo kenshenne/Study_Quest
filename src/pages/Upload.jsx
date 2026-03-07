@@ -428,7 +428,7 @@ Generate exactly ${count} questions now.`;
                 disabled={!canProceedStep1}
                 className="flex-1 py-3 bg-violet-600 hover:bg-violet-500 disabled:bg-white/8 disabled:text-white/30 disabled:cursor-not-allowed rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
               >
-                <Zap className="w-4 h-4" /> Generate {DIFFICULTY_INFO[difficulty].count} Questions
+                <Zap className="w-4 h-4" /> Generate {QUESTION_COUNT} Questions
               </button>
             </div>
           </div>
