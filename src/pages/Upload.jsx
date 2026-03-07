@@ -212,7 +212,7 @@ Generate exactly ${count} questions now.`;
             ...q,
             material_id: material.id,
             user_id: user.email,
-            difficulty,
+            difficulty: q.difficulty || "medium",
             options: q.options || [],
             hint: q.hint || ""
           }))
