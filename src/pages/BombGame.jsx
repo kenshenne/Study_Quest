@@ -79,9 +79,11 @@ export default function BombGame() {
   }, []);
 
   const startGame = async (matId) => {
-    const qs = await base44.entities.Question.filter({ material_id: matId, user_id: user.email, difficulty });
-    if (!qs.length) { alert("No questions found. Please upload study materials first."); return; }
-    const shuffled = [...qs].sort(() => Math.random() - 0.5);
+    const allQs = await base44.entities.Question.filter({ material_id: matId, user_id: user.email });
+    if (!allQs.length) { alert("No questions found. Please upload study materials first."); return; }
+    const diffQs = allQs.filter(q => q.difficulty === difficulty);
+    const pool = diffQs.length >= 5 ? diffQs : allQs;
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
     setQuestions(shuffled);
     setUsedQuestions([]);
     setCurrentLevel(0);
