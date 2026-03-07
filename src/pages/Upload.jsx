@@ -10,11 +10,7 @@ import MobileNav from "@/components/layout/MobileNav";
 
 const STEPS = ["Upload", "Configure", "Generate"];
 
-const DIFFICULTY_INFO = {
-  easy:   { color: "emerald", label: "Easy",   count: 15, desc: "15 multiple choice questions · Great for first review" },
-  medium: { color: "amber",   label: "Medium",  count: 25, desc: "25 questions · Multiple choice + enumeration · Hints included" },
-  hard:   { color: "rose",    label: "Hard",    count: 35, desc: "35 questions · All types + fill-in-the-blank · No hints" },
-};
+const QUESTION_COUNT = 45; // generate 35-50 questions (mixed difficulty)
 
 function getFileType(file) {
   if (!file) return "text";
