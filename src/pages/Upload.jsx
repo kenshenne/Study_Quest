@@ -409,36 +409,11 @@ Generate exactly ${count} questions now.`;
               />
             </div>
 
-            {/* Difficulty */}
-            <div>
-              <label className="text-sm text-white/60 block mb-2">Question Difficulty</label>
-              <div className="grid grid-cols-3 gap-3">
-                {Object.entries(DIFFICULTY_INFO).map(([key, info]) => (
-                  <button
-                    key={key}
-                    onClick={() => setDifficulty(key)}
-                    className={`p-4 rounded-xl border text-left transition-all ${
-                      difficulty === key
-                        ? key === "easy"   ? "bg-emerald-500/15 border-emerald-500 ring-1 ring-emerald-500/30"
-                          : key === "medium" ? "bg-amber-500/15 border-amber-500 ring-1 ring-amber-500/30"
-                          :                   "bg-rose-500/15 border-rose-500 ring-1 ring-rose-500/30"
-                        : "bg-white/3 border-white/8 hover:bg-white/6 hover:border-white/15"
-                    }`}
-                  >
-                    <div className={`font-bold text-sm mb-1 ${difficulty === key ? (key === "easy" ? "text-emerald-400" : key === "medium" ? "text-amber-400" : "text-rose-400") : "text-white/60"}`}>
-                      {info.label}
-                    </div>
-                    <div className="text-xs text-white/35 leading-snug">{info.desc}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Summary */}
             <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl px-4 py-3 flex items-center gap-3">
               <Zap className="w-4 h-4 text-violet-400 shrink-0" />
               <p className="text-sm text-white/60">
-                Will generate <span className="text-white font-semibold">{DIFFICULTY_INFO[difficulty].count} {difficulty}</span> questions from your material
+                Will generate <span className="text-white font-semibold">{QUESTION_COUNT} questions</span> (easy, medium & hard) — you choose difficulty when you play!
               </p>
             </div>
 
