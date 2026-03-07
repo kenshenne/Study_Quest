@@ -11,54 +11,90 @@ import AchievementToast from "../components/achievements/AchievementToast";
 import { checkAndAwardAchievements } from "../components/achievements/achievementsLib";
 
 const CELL_SIZE = 40;
-const COLS = 15;
-const ROWS = 12;
+const COLS = 13;
+const ROWS = 11;
+
+// Wall indices: 0=TOP, 1=RIGHT, 2=BOTTOM, 3=LEFT
+// Directions: [dr, dc, myWall, neighborWall]
+const DIRS = [
+  [-1,  0, 0, 2], // UP:    remove my TOP wall,   neighbor's BOTTOM wall
+  [ 0,  1, 1, 3], // RIGHT: remove my RIGHT wall,  neighbor's LEFT wall
+  [ 1,  0, 2, 0], // DOWN:  remove my BOTTOM wall, neighbor's TOP wall
+  [ 0, -1, 3, 1], // LEFT:  remove my LEFT wall,   neighbor's RIGHT wall
+];
 
 function generateMaze(cols, rows) {
+  // Each cell: walls[0]=top, walls[1]=right, walls[2]=bottom, walls[3]=left
   const grid = Array.from({ length: rows }, (_, r) =>
-    Array.from({ length: cols }, (_, c) => ({ r, c, walls: [true, true, true, true], visited: false }))
+    Array.from({ length: cols }, (_, c) => ({
+      r, c,
+      walls: [true, true, true, true],
+      visited: false
+    }))
   );
-  const stack = [];
-  const start = grid[0][0];
-  start.visited = true;
-  stack.push(start);
 
-  const dirs = [[0, -1, 0, 2], [1, 0, 3, 1], [0, 1, 2, 0], [-1, 0, 1, 3]];
+  // Recursive backtracker (iterative with explicit stack)
+  const stack = [grid[0][0]];
+  grid[0][0].visited = true;
 
-  while (stack.length) {
+  while (stack.length > 0) {
     const cur = stack[stack.length - 1];
-    const neighbors = dirs.map(([dc, dr, wall1, wall2]) => {
-      const nc = cur.c + dc;
+    // Shuffle directions each step for randomness
+    const shuffled = [...DIRS].sort(() => Math.random() - 0.5);
+    let moved = false;
+    for (const [dr, dc, myWall, neighborWall] of shuffled) {
       const nr = cur.r + dr;
-      if (nc >= 0 && nc < cols && nr >= 0 && nr < rows && !grid[nr][nc].visited) {
-        return { cell: grid[nr][nc], wall1, wall2 };
+      const nc = cur.c + dc;
+      if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !grid[nr][nc].visited) {
+        // Remove walls between current and neighbor
+        cur.walls[myWall] = false;
+        grid[nr][nc].walls[neighborWall] = false;
+        grid[nr][nc].visited = true;
+        stack.push(grid[nr][nc]);
+        moved = true;
+        break;
       }
-      return null;
-    }).filter(Boolean);
-
-    if (neighbors.length === 0) { stack.pop(); continue; }
-    const { cell, wall1, wall2 } = neighbors[Math.floor(Math.random() * neighbors.length)];
-    cur.walls[wall1] = false;
-    cell.walls[wall2] = false;
-    cell.visited = true;
-    stack.push(cell);
+    }
+    if (!moved) stack.pop();
   }
+
   return grid;
 }
 
+// Place checkpoints only on reachable cells (BFS from start)
 function placeCheckpoints(maze, questions) {
-  const count = Math.min(questions.length, 8);
-  const checkpoints = new Set();
-  while (checkpoints.size < count) {
-    const r = Math.floor(Math.random() * ROWS);
-    const c = Math.floor(Math.random() * COLS);
-    if (r === 0 && c === 0) continue;
-    checkpoints.add(`${r},${c}`);
+  const count = Math.min(questions.length, 6);
+
+  // BFS to get all reachable cells in order of distance
+  const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+  const queue = [{ r: 0, c: 0, dist: 0 }];
+  visited[0][0] = true;
+  const reachable = [];
+
+  while (queue.length > 0) {
+    const { r, c, dist } = queue.shift();
+    reachable.push({ r, c, dist });
+    const cell = maze[r][c];
+    const moves = [
+      { dr: -1, dc: 0, wall: 0 },
+      { dr: 0,  dc: 1, wall: 1 },
+      { dr: 1,  dc: 0, wall: 2 },
+      { dr: 0,  dc: -1, wall: 3 },
+    ];
+    for (const { dr, dc, wall } of moves) {
+      const nr = r + dr;
+      const nc = c + dc;
+      if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && !visited[nr][nc] && !cell.walls[wall]) {
+        visited[nr][nc] = true;
+        queue.push({ r: nr, c: nc, dist: dist + 1 });
+      }
+    }
   }
-  return [...checkpoints].map(pos => {
-    const [r, c] = pos.split(",").map(Number);
-    return { r, c };
-  });
+
+  // Pick checkpoints spread across reachable cells (skip start and end)
+  const candidates = reachable.filter(({ r, c }) => !(r === 0 && c === 0) && !(r === ROWS - 1 && c === COLS - 1));
+  const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
 }
 
 export default function MazeGame() {
