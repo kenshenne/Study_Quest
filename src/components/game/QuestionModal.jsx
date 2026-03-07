@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { CheckCircle, XCircle, X, Lightbulb } from "lucide-react";
 
 export default function QuestionModal({ question, onAnswer, onClose, showHint = false, doubleXP = false }) {
@@ -8,6 +8,12 @@ export default function QuestionModal({ question, onAnswer, onClose, showHint = 
   const [isCorrect, setIsCorrect] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [hintVisible, setHintVisible] = useState(false);
+
+  // Randomize options once per question render
+  const shuffledOptions = useMemo(() => {
+    if (!question?.options?.length) return question?.options || [];
+    return [...question.options].sort(() => Math.random() - 0.5);
+  }, [question?.question_text]);
 
   if (!question) return null;
 
