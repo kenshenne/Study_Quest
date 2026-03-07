@@ -318,7 +318,7 @@ export default function MazeGame() {
     <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col">
       <header className="border-b border-white/5 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={exitGame} className="text-white/40 hover:text-white transition-colors flex items-center gap-1.5 text-sm">
+          <button onPointerDown={exitGame} className="text-white/60 hover:text-white transition-colors flex items-center gap-1.5 text-sm px-3 py-2 bg-white/10 rounded-xl touch-manipulation active:bg-white/20">
             <ArrowLeft className="w-4 h-4" /> Exit
           </button>
           <h1 className="font-bold text-sm">Maze Quiz</h1>
