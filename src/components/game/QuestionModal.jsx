@@ -86,9 +86,9 @@ export default function QuestionModal({ question, onAnswer, onClose, showHint = 
           {/* Answer Input */}
           {!submitted && (
             <>
-              {question.question_type === "multiple_choice" && question.options?.length > 0 ? (
+              {question.question_type === "multiple_choice" && shuffledOptions?.length > 0 ? (
                 <div className="space-y-2">
-                  {question.options.map((opt, i) => (
+                  {shuffledOptions.map((opt, i) => (
                     <button
                       key={i}
                       onClick={() => setSelected(opt)}
