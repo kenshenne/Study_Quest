@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
-import { Link } from "react-router-dom";
-import { ArrowLeft, Users, User } from "lucide-react";
+import { ArrowLeft, Users, User, Trophy } from "lucide-react";
 import MobileNav from "@/components/layout/MobileNav";
 import QuestionModal from "../components/game/QuestionModal";
 import GameOverModal from "../components/game/GameOverModal";
@@ -14,39 +13,35 @@ const CELL_SIZE = 40;
 const COLS = 13;
 const ROWS = 11;
 
-// Wall indices: 0=TOP, 1=RIGHT, 2=BOTTOM, 3=LEFT
-// Directions: [dr, dc, myWall, neighborWall]
 const DIRS = [
-  [-1,  0, 0, 2], // UP:    remove my TOP wall,   neighbor's BOTTOM wall
-  [ 0,  1, 1, 3], // RIGHT: remove my RIGHT wall,  neighbor's LEFT wall
-  [ 1,  0, 2, 0], // DOWN:  remove my BOTTOM wall, neighbor's TOP wall
-  [ 0, -1, 3, 1], // LEFT:  remove my LEFT wall,   neighbor's RIGHT wall
+  [-1,  0, 0, 2],
+  [ 0,  1, 1, 3],
+  [ 1,  0, 2, 0],
+  [ 0, -1, 3, 1],
 ];
 
-function generateMaze(cols, rows) {
-  // Each cell: walls[0]=top, walls[1]=right, walls[2]=bottom, walls[3]=left
-  const grid = Array.from({ length: rows }, (_, r) =>
-    Array.from({ length: cols }, (_, c) => ({
-      r, c,
-      walls: [true, true, true, true],
-      visited: false
-    }))
-  );
+function seededRandom(seed) {
+  let s = seed;
+  return () => {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    return (s >>> 0) / 0xffffffff;
+  };
+}
 
-  // Recursive backtracker (iterative with explicit stack)
+function generateMaze(cols, rows, seed) {
+  const rng = seed != null ? seededRandom(seed) : Math.random.bind(Math);
+  const grid = Array.from({ length: rows }, (_, r) =>
+    Array.from({ length: cols }, (_, c) => ({ r, c, walls: [true, true, true, true], visited: false }))
+  );
   const stack = [grid[0][0]];
   grid[0][0].visited = true;
-
   while (stack.length > 0) {
     const cur = stack[stack.length - 1];
-    // Shuffle directions each step for randomness
-    const shuffled = [...DIRS].sort(() => Math.random() - 0.5);
+    const shuffled = [...DIRS].sort(() => rng() - 0.5);
     let moved = false;
     for (const [dr, dc, myWall, neighborWall] of shuffled) {
-      const nr = cur.r + dr;
-      const nc = cur.c + dc;
+      const nr = cur.r + dr, nc = cur.c + dc;
       if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !grid[nr][nc].visited) {
-        // Remove walls between current and neighbor
         cur.walls[myWall] = false;
         grid[nr][nc].walls[neighborWall] = false;
         grid[nr][nc].visited = true;
@@ -57,56 +52,50 @@ function generateMaze(cols, rows) {
     }
     if (!moved) stack.pop();
   }
-
   return grid;
 }
 
-// Place checkpoints only on reachable cells (BFS from start)
 function placeCheckpoints(maze, questions) {
   const count = Math.min(questions.length, 6);
-
-  // BFS to get all reachable cells in order of distance
   const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
   const queue = [{ r: 0, c: 0, dist: 0 }];
   visited[0][0] = true;
   const reachable = [];
-
   while (queue.length > 0) {
     const { r, c, dist } = queue.shift();
     reachable.push({ r, c, dist });
     const cell = maze[r][c];
     const moves = [
-      { dr: -1, dc: 0, wall: 0 },
-      { dr: 0,  dc: 1, wall: 1 },
-      { dr: 1,  dc: 0, wall: 2 },
-      { dr: 0,  dc: -1, wall: 3 },
+      { dr: -1, dc: 0, wall: 0 }, { dr: 0, dc: 1, wall: 1 },
+      { dr: 1, dc: 0, wall: 2 }, { dr: 0, dc: -1, wall: 3 },
     ];
     for (const { dr, dc, wall } of moves) {
-      const nr = r + dr;
-      const nc = c + dc;
+      const nr = r + dr, nc = c + dc;
       if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && !visited[nr][nc] && !cell.walls[wall]) {
         visited[nr][nc] = true;
         queue.push({ r: nr, c: nc, dist: dist + 1 });
       }
     }
   }
-
-  // Pick checkpoints spread across reachable cells (skip start and end)
   const candidates = reachable.filter(({ r, c }) => !(r === 0 && c === 0) && !(r === ROWS - 1 && c === COLS - 1));
   const shuffled = [...candidates].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 }
 
+// Player 2 starts at top-right corner
+const P1_START = { r: 0, c: 0 };
+const P2_START = { r: 0, c: COLS - 1 };
+
 export default function MazeGame() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [phase, setPhase] = useState("setup"); // setup | inviting | playing | over
+  const [phase, setPhase] = useState("setup");
   const [materialId, setMaterialId] = useState(null);
   const [difficulty, setDifficulty] = useState("medium");
   const [questions, setQuestions] = useState([]);
   const [qIndex, setQIndex] = useState(0);
   const [maze, setMaze] = useState(null);
-  const [player, setPlayer] = useState({ r: 0, c: 0 });
+  const [player, setPlayer] = useState(P1_START);
   const [checkpoints, setCheckpoints] = useState([]);
   const [visitedCheckpoints, setVisitedCheckpoints] = useState(new Set());
   const [activeQuestion, setActiveQuestion] = useState(null);
@@ -114,10 +103,19 @@ export default function MazeGame() {
   const [startTime, setStartTime] = useState(null);
   const [friends, setFriends] = useState([]);
   const [showInvite, setShowInvite] = useState(false);
-  const [playMode, setPlayMode] = useState(null);
+  const [playMode, setPlayMode] = useState(null); // "solo" | "multi"
   const [sessionId, setSessionId] = useState(null);
   const [newAchievements, setNewAchievements] = useState([]);
   const gameRef = useRef(null);
+
+  // Multiplayer state
+  const [mpSession, setMpSession] = useState(null); // MultiplayerSession record
+  const [isPlayer1, setIsPlayer1] = useState(true);
+  const [opponentPos, setOpponentPos] = useState(null);
+  const [opponentCheckpoints, setOpponentCheckpoints] = useState(0);
+  const [opponentFinished, setOpponentFinished] = useState(false);
+  const [mpOver, setMpOver] = useState(null); // { winner, myXP }
+  const mpPollRef = useRef(null);
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -137,28 +135,53 @@ export default function MazeGame() {
     setFriends(all.flat());
   };
 
-  const startGame = async (matId) => {
+  // ── MULTIPLAYER POLLING ──────────────────────────────────────────────────────
+  const startMpPolling = useCallback((sessionId, myIsP1) => {
+    if (mpPollRef.current) clearInterval(mpPollRef.current);
+    mpPollRef.current = setInterval(async () => {
+      const sessions = await base44.entities.MultiplayerSession.filter({ id: sessionId });
+      if (!sessions.length) return;
+      const s = sessions[0];
+      const oppPos = myIsP1 ? s.player2_pos : s.player1_pos;
+      const oppCps = myIsP1 ? s.player2_checkpoints : s.player1_checkpoints;
+      const oppFin = myIsP1 ? s.player2_finished : s.player1_finished;
+      if (oppPos) setOpponentPos(oppPos);
+      setOpponentCheckpoints(oppCps || 0);
+      if (oppFin && !opponentFinished) setOpponentFinished(true);
+      if (s.status === "finished" && s.winner_id) {
+        clearInterval(mpPollRef.current);
+        setMpOver({ winner_id: s.winner_id, winner_username: myIsP1 ? s.player2_username : s.player1_username, total_xp: (s.player1_xp || 0) + (s.player2_xp || 0) });
+      }
+    }, 2000);
+  }, [opponentFinished]);
+
+  useEffect(() => () => { if (mpPollRef.current) clearInterval(mpPollRef.current); }, []);
+
+  // ── START SOLO GAME ──────────────────────────────────────────────────────────
+  const startGame = async (matId, seed, mpSess, iAmP1) => {
     const allQs = await base44.entities.Question.filter({ material_id: matId, user_id: user.email });
-    if (allQs.length === 0) {
-      alert("No questions found for this material. Please upload materials first.");
-      return;
-    }
-    // Filter by difficulty — fallback to all if not enough
+    if (allQs.length === 0) { alert("No questions found for this material."); return; }
     const diffQs = allQs.filter(q => q.difficulty === difficulty);
     const pool = diffQs.length >= 8 ? diffQs : allQs;
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
     const limited = shuffled.slice(0, Math.min(shuffled.length, 15));
     setQuestions(limited);
-    const newMaze = generateMaze(COLS, ROWS);
+    const newMaze = generateMaze(COLS, ROWS, seed ?? null);
     const cps = placeCheckpoints(newMaze, limited);
     setMaze(newMaze);
     setCheckpoints(cps);
-    setPlayer({ r: 0, c: 0 });
+    const startPos = (mpSess && !iAmP1) ? P2_START : P1_START;
+    setPlayer(startPos);
     setVisitedCheckpoints(new Set());
     setQIndex(0);
     setGameStats({ correct: 0, incorrect: 0, total: 0, xp: 0, mistakes: [] });
     setStartTime(Date.now());
-    // Create session immediately for partial-game saving
+    if (mpSess) {
+      setMpSession(mpSess);
+      setIsPlayer1(iAmP1);
+      setOpponentPos(iAmP1 ? P2_START : P1_START);
+      startMpPolling(mpSess.id, iAmP1);
+    }
     try {
       const s = await base44.entities.GameSession.create({
         user_id: user.email, username: profile?.username || user.email,
@@ -172,6 +195,59 @@ export default function MazeGame() {
     setTimeout(() => gameRef.current?.focus(), 100);
   };
 
+  // ── SEND INVITE ──────────────────────────────────────────────────────────────
+  const sendInvite = async (friendProfile) => {
+    const seed = Math.floor(Math.random() * 999999);
+    const invite = await base44.entities.GameInvite.create({
+      from_user_id: user.email,
+      from_username: profile?.username || user.email,
+      to_user_id: friendProfile.user_id,
+      game_type: "maze",
+      material_id: materialId,
+      difficulty,
+      status: "pending"
+    });
+    // Create shared multiplayer session immediately
+    const sess = await base44.entities.MultiplayerSession.create({
+      game_type: "maze",
+      material_id: materialId,
+      difficulty,
+      player1_id: user.email,
+      player1_username: profile?.username || user.email,
+      player2_id: friendProfile.user_id,
+      player2_username: friendProfile.username,
+      player1_pos: P1_START,
+      player2_pos: P2_START,
+      player1_score: 0, player2_score: 0,
+      player1_xp: 0, player2_xp: 0,
+      player1_checkpoints: 0, player2_checkpoints: 0,
+      player1_finished: false, player2_finished: false,
+      status: "active",
+      maze_seed: seed,
+      invite_id: invite.id
+    });
+    setShowInvite(false);
+    setPlayMode("multi");
+    await startGame(materialId, seed, sess, true);
+  };
+
+  // ── ACCEPT INVITE (called from InviteNotification on Dashboard / any page) ──
+  // This is exposed via URL param: ?join=<multiplayerSessionId>
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const joinId = params.get("join");
+    if (!joinId || !user) return;
+    const joinSession = async () => {
+      const sessions = await base44.entities.MultiplayerSession.filter({ id: joinId });
+      if (!sessions.length) return;
+      const sess = sessions[0];
+      setPlayMode("multi");
+      await startGame(sess.material_id, sess.maze_seed, sess, false);
+    };
+    joinSession();
+  }, [user]);
+
+  // ── MOVEMENT ─────────────────────────────────────────────────────────────────
   const handleKeyDown = useCallback((e) => {
     if (phase !== "playing" || activeQuestion) return;
     const moves = {
@@ -184,15 +260,18 @@ export default function MazeGame() {
     if (!move) return;
     e.preventDefault();
     const { dr, dc, wall } = move;
-    const nr = player.r + dr;
-    const nc = player.c + dc;
+    const nr = player.r + dr, nc = player.c + dc;
     if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) return;
     if (maze[player.r][player.c].walls[wall]) return;
-
     const newPos = { r: nr, c: nc };
     setPlayer(newPos);
 
-    // Check checkpoint
+    // Sync position in multiplayer
+    if (mpSession) {
+      const field = isPlayer1 ? "player1_pos" : "player2_pos";
+      base44.entities.MultiplayerSession.update(mpSession.id, { [field]: newPos }).catch(() => {});
+    }
+
     const cpKey = `${nr},${nc}`;
     const cpIdx = checkpoints.findIndex(cp => cp.r === nr && cp.c === nc);
     if (cpIdx !== -1 && !visitedCheckpoints.has(cpKey)) {
@@ -200,23 +279,22 @@ export default function MazeGame() {
       if (q) setActiveQuestion(q);
     }
 
-    // Check exit (bottom-right)
     if (nr === ROWS - 1 && nc === COLS - 1 && visitedCheckpoints.size >= checkpoints.length) {
       endGame();
     }
-  }, [phase, activeQuestion, player, maze, checkpoints, visitedCheckpoints, qIndex, questions]);
+  }, [phase, activeQuestion, player, maze, checkpoints, visitedCheckpoints, qIndex, questions, mpSession, isPlayer1]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
+  // ── ANSWER ───────────────────────────────────────────────────────────────────
   const handleAnswer = (correct) => {
     const q = activeQuestion;
     const cpKey = `${player.r},${player.c}`;
     const newVisited = new Set(visitedCheckpoints);
     newVisited.add(cpKey);
-
     const xpGain = correct ? (difficulty === "easy" ? 10 : difficulty === "medium" ? 20 : 30) : 0;
     const newStats = {
       ...gameStats,
@@ -225,10 +303,8 @@ export default function MazeGame() {
       total: gameStats.total + 1,
       xp: gameStats.xp + xpGain,
       mistakes: correct ? gameStats.mistakes : [...gameStats.mistakes, {
-        question: q.question_text,
-        yourAnswer: "incorrect",
-        correct: q.correct_answer,
-        explanation: q.explanation
+        question: q.question_text, yourAnswer: "incorrect",
+        correct: q.correct_answer, explanation: q.explanation
       }]
     };
     setGameStats(newStats);
@@ -236,21 +312,79 @@ export default function MazeGame() {
     setQIndex(prev => prev + 1);
     setActiveQuestion(null);
 
+    // Sync checkpoints + XP in multiplayer
+    if (mpSession) {
+      const cpField = isPlayer1 ? "player1_checkpoints" : "player2_checkpoints";
+      const xpField = isPlayer1 ? "player1_xp" : "player2_xp";
+      base44.entities.MultiplayerSession.update(mpSession.id, {
+        [cpField]: newVisited.size,
+        [xpField]: newStats.xp
+      }).catch(() => {});
+    }
+
     if (!correct) {
-      // Teleport to random location
       const nr = Math.floor(Math.random() * ROWS);
       const nc = Math.floor(Math.random() * COLS);
       setPlayer({ r: nr, c: nc });
     }
-
-    if (newStats.total >= questions.length) {
-      endGame(newStats);
-    }
+    if (newStats.total >= questions.length) endGame(newStats);
   };
 
+  // ── END GAME ─────────────────────────────────────────────────────────────────
   const endGame = async (finalStats = gameStats) => {
     if (!user) return;
+    if (mpPollRef.current) clearInterval(mpPollRef.current);
     const time = Math.floor((Date.now() - startTime) / 1000);
+
+    if (mpSession) {
+      // Mark this player as finished and save their XP
+      const finField = isPlayer1 ? "player1_finished" : "player2_finished";
+      const xpField = isPlayer1 ? "player1_xp" : "player2_xp";
+      await base44.entities.MultiplayerSession.update(mpSession.id, {
+        [finField]: true,
+        [xpField]: finalStats.xp
+      });
+
+      // Fetch latest session to see if opponent also finished
+      const [sess] = await base44.entities.MultiplayerSession.filter({ id: mpSession.id });
+      const bothFinished = sess.player1_finished && sess.player2_finished;
+
+      if (bothFinished || !opponentFinished) {
+        // Determine winner: first to finish wins. Tie-break: more XP
+        let winnerId;
+        if (!opponentFinished) {
+          // I finished first
+          winnerId = user.email;
+        } else {
+          // Opponent finished first
+          winnerId = isPlayer1 ? sess.player2_id : sess.player1_id;
+        }
+        const totalXP = (sess.player1_xp || 0) + (sess.player2_xp || 0);
+        await base44.entities.MultiplayerSession.update(mpSession.id, {
+          status: "finished",
+          winner_id: winnerId
+        });
+        // Award XP only to winner
+        const iWon = winnerId === user.email;
+        const myXP = iWon ? totalXP : 0;
+        if (profile && iWon) {
+          const newXP = (profile.xp || 0) + myXP;
+          await base44.entities.UserProfile.update(profile.id, {
+            xp: newXP, level: Math.floor(newXP / 200) + 1,
+            total_questions_answered: (profile.total_questions_answered || 0) + finalStats.total,
+            total_correct: (profile.total_correct || 0) + finalStats.correct,
+          });
+        }
+        setMpOver({ winner_id: winnerId, iWon, myXP, totalXP });
+        setPhase("mpover");
+        return;
+      }
+      // Still waiting for opponent — show waiting state briefly then transition
+      setPhase("mpover");
+      return;
+    }
+
+    // Solo end game
     try {
       const sessionData = {
         score: finalStats.correct * (difficulty === "easy" ? 10 : difficulty === "medium" ? 20 : 30),
@@ -282,24 +416,10 @@ export default function MazeGame() {
   };
 
   const exitGame = () => endGame();
-
-  const sendInvite = async (friendProfile) => {
-    await base44.entities.GameInvite.create({
-      from_user_id: user.email,
-      from_username: profile?.username || user.email,
-      to_user_id: friendProfile.user_id,
-      game_type: "maze",
-      material_id: materialId,
-      difficulty,
-      status: "pending"
-    });
-    setShowInvite(false);
-    startGame(materialId);
-  };
-
   const canvasW = COLS * CELL_SIZE;
   const canvasH = ROWS * CELL_SIZE;
 
+  // ── SETUP PHASE ──────────────────────────────────────────────────────────────
   if (phase === "setup") {
     return (
       <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -319,7 +439,7 @@ export default function MazeGame() {
                 </button>
                 {friends.length > 0 && (
                   <button onClick={() => setShowInvite(true)} className="w-full py-3 bg-violet-600/20 hover:bg-violet-600/40 border border-violet-500/40 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors text-violet-300">
-                    <Users className="w-4 h-4" /> Invite a Friend
+                    <Users className="w-4 h-4" /> Challenge a Friend
                   </button>
                 )}
               </div>
@@ -328,7 +448,7 @@ export default function MazeGame() {
 
           {showInvite && (
             <div className="mt-4 bg-white/5 border border-white/10 rounded-2xl p-5">
-              <h3 className="font-semibold mb-3">Select Friend to Invite</h3>
+              <h3 className="font-semibold mb-3">Select Friend to Challenge</h3>
               {friends.map(f => (
                 <button key={f.id} onClick={() => sendInvite(f)} className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-violet-500/50 text-sm mb-2 transition-all flex items-center gap-3">
                   <span className="text-lg">{f.avatar || "🎓"}</span>
@@ -342,6 +462,37 @@ export default function MazeGame() {
     );
   }
 
+  // ── MULTIPLAYER GAME OVER ─────────────────────────────────────────────────────
+  if (phase === "mpover" && mpOver) {
+    const iWon = mpOver.winner_id === user?.email;
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center p-4">
+        <div className="bg-[#13131f] border border-white/10 rounded-2xl p-8 max-w-sm w-full text-center">
+          <div className="text-5xl mb-4">{iWon ? "🏆" : "😔"}</div>
+          <h2 className="text-2xl font-bold mb-2">{iWon ? "You Win!" : "You Lose"}</h2>
+          <p className="text-white/50 text-sm mb-6">
+            {iWon
+              ? `You reached the finish first! You earn all XP: +${mpOver.totalXP} XP`
+              : "Your opponent finished first. Better luck next time!"}
+          </p>
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <Trophy className="w-5 h-5 text-yellow-400" />
+            <span className="text-xl font-bold text-yellow-400">{iWon ? `+${mpOver.totalXP}` : "+0"} XP</span>
+          </div>
+          <div className="flex gap-3">
+            <button onClick={() => { setPhase("setup"); setMpSession(null); setMpOver(null); setPlayMode(null); }} className="flex-1 py-3 bg-white/10 hover:bg-white/15 rounded-xl text-sm font-semibold transition-colors">
+              Play Again
+            </button>
+            <a href={createPageUrl("Dashboard")} className="flex-1 py-3 bg-violet-600 hover:bg-violet-500 rounded-xl text-sm font-semibold transition-colors text-center">
+              Dashboard
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── SOLO GAME OVER ────────────────────────────────────────────────────────────
   if (phase === "over") {
     return (
       <>
@@ -353,6 +504,7 @@ export default function MazeGame() {
     );
   }
 
+  // ── PLAYING ───────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col">
       <header className="border-b border-white/5 px-4 py-3 flex items-center justify-between">
@@ -360,9 +512,12 @@ export default function MazeGame() {
           <button onPointerDown={exitGame} className="text-white/60 hover:text-white transition-colors flex items-center gap-1.5 text-sm px-3 py-2 bg-white/10 rounded-xl touch-manipulation active:bg-white/20">
             <ArrowLeft className="w-4 h-4" /> Exit
           </button>
-          <h1 className="font-bold text-sm">Maze Quiz</h1>
+          <h1 className="font-bold text-sm">Maze Quiz {mpSession && <span className="text-violet-400 ml-1">⚔ VS</span>}</h1>
         </div>
         <div className="flex items-center gap-4 text-xs text-white/50">
+          {mpSession && (
+            <span className="text-violet-300 font-semibold">Opp: {opponentCheckpoints} ✓ {opponentFinished ? "🏁" : ""}</span>
+          )}
           <span>✅ {gameStats.correct}</span>
           <span>❌ {gameStats.incorrect}</span>
           <span>📍 {visitedCheckpoints.size}/{checkpoints.length}</span>
@@ -373,6 +528,7 @@ export default function MazeGame() {
         <div className="relative mx-auto" style={{ width: canvasW, minWidth: canvasW }}>
           <svg width={canvasW} height={canvasH} style={{ display: "block", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12 }}>
             <rect width={canvasW} height={canvasH} fill="#0d0d18" rx={12} />
+
             {/* Exit marker */}
             <rect x={(COLS - 1) * CELL_SIZE} y={(ROWS - 1) * CELL_SIZE} width={CELL_SIZE} height={CELL_SIZE} fill="rgba(16,185,129,0.2)" rx={4} />
             <text x={(COLS - 1) * CELL_SIZE + CELL_SIZE / 2} y={(ROWS - 1) * CELL_SIZE + CELL_SIZE / 2 + 5} textAnchor="middle" fontSize={18}>🏁</text>
@@ -390,10 +546,8 @@ export default function MazeGame() {
 
             {/* Walls */}
             {maze && maze.flat().map((cell, idx) => {
-              const x = cell.c * CELL_SIZE;
-              const y = cell.r * CELL_SIZE;
-              const stroke = "rgba(99,102,241,0.4)";
-              const sw = 2;
+              const x = cell.c * CELL_SIZE, y = cell.r * CELL_SIZE;
+              const stroke = "rgba(99,102,241,0.4)", sw = 2;
               return (
                 <g key={idx}>
                   {cell.walls[0] && <line x1={x} y1={y} x2={x + CELL_SIZE} y2={y} stroke={stroke} strokeWidth={sw} />}
@@ -404,25 +558,31 @@ export default function MazeGame() {
               );
             })}
 
+            {/* Opponent (multiplayer) */}
+            {mpSession && opponentPos && (
+              <>
+                <circle cx={opponentPos.c * CELL_SIZE + CELL_SIZE / 2} cy={opponentPos.r * CELL_SIZE + CELL_SIZE / 2} r={CELL_SIZE / 2 - 6} fill="rgba(239,68,68,0.7)" />
+                <text x={opponentPos.c * CELL_SIZE + CELL_SIZE / 2} y={opponentPos.r * CELL_SIZE + CELL_SIZE / 2 + 5} textAnchor="middle" fontSize={14}>👹</text>
+              </>
+            )}
+
             {/* Player */}
             <circle cx={player.c * CELL_SIZE + CELL_SIZE / 2} cy={player.r * CELL_SIZE + CELL_SIZE / 2} r={CELL_SIZE / 2 - 6} fill="rgba(139,92,246,0.9)" />
             <text x={player.c * CELL_SIZE + CELL_SIZE / 2} y={player.r * CELL_SIZE + CELL_SIZE / 2 + 5} textAnchor="middle" fontSize={16}>🧙</text>
           </svg>
 
-          <p className="text-center text-xs text-white/30 mt-2">Use arrow keys to navigate · Reach ❓ to answer questions</p>
+          <p className="text-center text-xs text-white/30 mt-2">
+            {mpSession ? "🧙 You (purple) vs 👹 Opponent · Reach 🏁 first to win all XP!" : "Use arrow keys · Reach ❓ to answer · Get to 🏁"}
+          </p>
         </div>
       </div>
 
-      {/* D-Pad Controls */}
+      {/* D-Pad */}
       <div className="flex flex-col items-center gap-1 p-4">
-        {[
-          { key: "ArrowUp", label: "↑" },
-        ].map(({ key, label }) => (
-          <button key={key} onTouchStart={() => handleKeyDown({ key, preventDefault: () => {} })} className="w-12 h-12 bg-white/10 rounded-xl text-lg font-bold">{label}</button>
-        ))}
+        <button onTouchStart={() => handleKeyDown({ key: "ArrowUp", preventDefault: () => {} })} className="w-12 h-12 bg-white/10 rounded-xl text-lg font-bold">↑</button>
         <div className="flex gap-1">
-          {[{ key: "ArrowLeft", label: "←" }, { key: "ArrowDown", label: "↓" }, { key: "ArrowRight", label: "→" }].map(({ key, label }) => (
-            <button key={key} onTouchStart={() => handleKeyDown({ key, preventDefault: () => {} })} className="w-12 h-12 bg-white/10 rounded-xl text-lg font-bold">{label}</button>
+          {[["ArrowLeft", "←"], ["ArrowDown", "↓"], ["ArrowRight", "→"]].map(([k, l]) => (
+            <button key={k} onTouchStart={() => handleKeyDown({ key: k, preventDefault: () => {} })} className="w-12 h-12 bg-white/10 rounded-xl text-lg font-bold">{l}</button>
           ))}
         </div>
       </div>
