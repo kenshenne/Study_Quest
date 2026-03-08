@@ -230,7 +230,7 @@ export default function MazeGame() {
     });
     setShowInvite(false);
     setPlayMode("multi");
-    await startGame(materialId, seed, sess, true);
+    await startGame(materialId, seed, sess, true, user.email);
   };
 
   // ── ACCEPT INVITE (called from InviteNotification on Dashboard / any page) ──
