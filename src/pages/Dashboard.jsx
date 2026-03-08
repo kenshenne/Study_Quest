@@ -7,6 +7,7 @@ import MobileNav from "@/components/layout/MobileNav";
 import InviteNotification from "@/components/game/InviteNotification";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [achievements, setAchievements] = useState([]);
