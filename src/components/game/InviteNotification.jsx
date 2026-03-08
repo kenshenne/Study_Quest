@@ -24,12 +24,16 @@ export default function InviteNotification({ userId, onAccepted }) {
   const accept = async () => {
     setLoading(true);
     await base44.entities.GameInvite.update(invite.id, { status: "accepted" });
-    // Find or wait for the MultiplayerSession created by the inviter
+    // The MultiplayerSession was already created by the inviter — find it by player IDs
     let session = null;
     for (let i = 0; i < 10; i++) {
-      const sessions = await base44.entities.MultiplayerSession.filter({ invite_id: invite.id });
+      const sessions = await base44.entities.MultiplayerSession.filter({
+        player1_id: invite.from_user_id,
+        player2_id: invite.to_user_id,
+        status: "active"
+      });
       if (sessions.length > 0) { session = sessions[0]; break; }
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 1200));
     }
     setInvite(null);
     setLoading(false);
