@@ -157,11 +157,13 @@ export default function MazeGame() {
 
   useEffect(() => () => { if (mpPollRef.current) clearInterval(mpPollRef.current); }, []);
 
-  // ── START SOLO GAME ──────────────────────────────────────────────────────────
-  const startGame = async (matId, seed, mpSess, iAmP1) => {
-    const allQs = await base44.entities.Question.filter({ material_id: matId, user_id: user.email });
+  // ── START GAME ───────────────────────────────────────────────────────────────
+  // ownerUserId: for multiplayer, use the inviter's (player1) user id to fetch their questions
+  const startGame = async (matId, seed, mpSess, iAmP1, ownerUserId) => {
+    const questionOwnerId = ownerUserId || user.email;
+    const allQs = await base44.entities.Question.filter({ material_id: matId, user_id: questionOwnerId });
     if (allQs.length === 0) { alert("No questions found for this material."); return; }
-    const diffQs = allQs.filter(q => q.difficulty === difficulty);
+    const diffQs = allQs.filter(q => q.difficulty === (mpSess?.difficulty || difficulty));
     const pool = diffQs.length >= 8 ? diffQs : allQs;
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
     const limited = shuffled.slice(0, Math.min(shuffled.length, 15));
