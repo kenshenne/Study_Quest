@@ -233,18 +233,20 @@ export default function MazeGame() {
     await startGame(materialId, seed, sess, true, user.email);
   };
 
-  // ── ACCEPT INVITE (called from InviteNotification on Dashboard / any page) ──
-  // This is exposed via URL param: ?join=<multiplayerSessionId>
+  // ── ACCEPT INVITE via URL param: ?join=<multiplayerSessionId> ───────────────
   useEffect(() => {
+    if (!user) return; // wait until auth is resolved
     const params = new URLSearchParams(window.location.search);
     const joinId = params.get("join");
-    if (!joinId || !user) return;
+    if (!joinId) return;
     const joinSession = async () => {
       const sessions = await base44.entities.MultiplayerSession.filter({ id: joinId });
       if (!sessions.length) return;
       const sess = sessions[0];
       setPlayMode("multi");
-      await startGame(sess.material_id, sess.maze_seed, sess, false);
+      setDifficulty(sess.difficulty || "medium");
+      // Player 2 uses Player 1's questions (the inviter's material)
+      await startGame(sess.material_id, sess.maze_seed, sess, false, sess.player1_id);
     };
     joinSession();
   }, [user]);
