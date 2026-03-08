@@ -208,6 +208,14 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Invite Notification — listens for incoming game invites */}
+        {user && (
+          <InviteNotification
+            userId={user.email}
+            onAccepted={(session) => navigate(createPageUrl("MazeGame") + `?join=${session.id}`)}
+          />
+        )}
+
         {/* Upload CTA */}
         <div className="mt-5 bg-white/5 border border-white/10 rounded-2xl p-5 md:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
