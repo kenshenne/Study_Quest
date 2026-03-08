@@ -248,8 +248,6 @@ Generate exactly ${count} questions now.`;
     </div>
   );
 
-  const diffInfo = DIFFICULTY_INFO[difficulty];
-
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
       <header className="border-b border-white/5 px-4 py-3 flex items-center gap-3 sticky top-0 bg-[#0a0a0f]/90 backdrop-blur-sm z-10">
