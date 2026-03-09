@@ -208,7 +208,8 @@ export default function MazeGame() {
       setMpSession(mpSess);
       setIsPlayer1(iAmP1);
       setOpponentPos(iAmP1 ? P2_START : P1_START);
-      startMpPolling(mpSess.id, iAmP1);
+      setOpponentWon(false);
+      startMpPolling(mpSess.id, iAmP1, user.email);
     }
     try {
       const s = await base44.entities.GameSession.create({
