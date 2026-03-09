@@ -358,11 +358,21 @@ export default function MazeGame() {
     }
 
     if (!correct) {
+      // Teleport player to random position
       const nr = Math.floor(Math.random() * ROWS);
       const nc = Math.floor(Math.random() * COLS);
-      setPlayer({ r: nr, c: nc });
+      const newPlayerPos = { r: nr, c: nc };
+      setPlayer(newPlayerPos);
+      // Add a new question (re-queue from pool) and a new checkpoint
+      setQuestions(prev => {
+        const extra = [...prev].sort(() => Math.random() - 0.5)[0];
+        return extra ? [...prev, extra] : prev;
+      });
+      setCheckpoints(prev => {
+        const newCp = findFreeCell(prev, newPlayerPos);
+        return newCp ? [...prev, newCp] : prev;
+      });
     }
-    if (newStats.total >= questions.length) endGame(newStats);
   };
 
   // ── END GAME ─────────────────────────────────────────────────────────────────
