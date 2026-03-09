@@ -266,13 +266,13 @@ export default function BlastGame() {
     setGameStats(newStats);
     setQIndex(prev => prev + 1);
     setActiveQuestion(null);
+    activeQRef.current = null;
 
-    const newBoard = pendingBoard || board;
+    const newBoard = pendingBoard || boardStateRef.current;
     setPendingBoard(null);
 
     if (!correct) {
       if (difficulty === "hard") {
-        // Instant game over
         endGame(newStats);
         return;
       } else if (difficulty === "medium") {
@@ -280,7 +280,6 @@ export default function BlastGame() {
         setLives(newLives);
         if (newLives <= 0) { endGame(newStats); return; }
       }
-      // easy: retry already handled (just continue)
     }
 
     if (newStats.total >= questions.length) {
@@ -288,8 +287,8 @@ export default function BlastGame() {
       return;
     }
 
-    const linesCleared = newBoard !== board ? 1 : 0;
-    finalizeLand(newBoard, linesCleared);
+    const linesCleared = pendingBoard ? 1 : 0;
+    finalizeLandImmediate(newBoard, linesCleared, questions, qIndex + 1);
   };
 
   const endGame = async (finalStats = gameStats) => {
