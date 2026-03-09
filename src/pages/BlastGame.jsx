@@ -245,21 +245,7 @@ export default function BlastGame() {
     });
   }, []);
 
-  const finalizeLand = (newBoard, linesCleared) => {
-    setBoard(newBoard);
-    setLines(prev => prev + linesCleared);
-    setScore(prev => prev + linesCleared * 100);
-    const newPiece = nextPiece || randomPiece();
-    const afterNext = randomPiece();
-    // Check game over
-    if (!canPlace(newBoard, { ...newPiece, x: Math.floor(COLS / 2) - 1, y: 0 })) {
-      endGame();
-      return;
-    }
-    setPiece({ ...newPiece, x: Math.floor(COLS / 2) - 1, y: 0 });
-    setNextPiece(afterNext);
-    setLocked(false);
-  };
+
 
   const handleAnswer = (correct) => {
     const q = activeQuestion;
