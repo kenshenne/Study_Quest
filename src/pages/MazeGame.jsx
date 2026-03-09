@@ -606,7 +606,9 @@ export default function MazeGame() {
           </svg>
 
           <p className="text-center text-xs text-white/30 mt-2">
-            {mpSession ? "🧙 You (purple) vs 👹 Opponent · Reach 🏁 first to win all XP!" : "Use arrow keys · Reach ❓ to answer · Get to 🏁"}
+            {mpSession
+              ? `🧙 You (purple) vs 👹 Opponent · Need ${MIN_CORRECT[difficulty]} correct answers to finish · Reach 🏁 first!`
+              : `Use arrow keys · Reach ❓ to answer · Get ${MIN_CORRECT[difficulty]} correct answers then reach 🏁`}
           </p>
         </div>
       </div>
