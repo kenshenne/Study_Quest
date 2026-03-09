@@ -320,7 +320,6 @@ export default function BlastGame() {
       }
     } catch (e) { console.error(e); }
     setGameStats(finalStats);
-    setPhase("over");
   };
 
   const handleKeyDown = useCallback((e) => {
