@@ -133,6 +133,7 @@ export default function MazeGame() {
   const [opponentCheckpoints, setOpponentCheckpoints] = useState(0);
   const [opponentFinished, setOpponentFinished] = useState(false);
   const [mpOver, setMpOver] = useState(null); // { winner, myXP }
+  const [opponentWon, setOpponentWon] = useState(false); // opponent won but I can still continue
   const mpPollRef = useRef(null);
 
   useEffect(() => {

@@ -88,6 +88,8 @@ export default function BlastGame() {
   const [newAchievements, setNewAchievements] = useState([]);
   const tickRef = useRef(null);
   const boardRef = useRef(null);
+  const pieceRef = useRef(null);
+  const boardStateRef = useRef(null);
 
   useEffect(() => {
     base44.auth.me().then(u => {
