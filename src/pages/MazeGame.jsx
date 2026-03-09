@@ -394,38 +394,27 @@ export default function MazeGame() {
       const [sess] = await base44.entities.MultiplayerSession.filter({ id: mpSession.id });
       const bothFinished = sess.player1_finished && sess.player2_finished;
 
-      if (bothFinished || !opponentFinished) {
-        // Determine winner: first to finish wins. Tie-break: more XP
-        let winnerId;
-        if (!opponentFinished) {
-          // I finished first
-          winnerId = user.email;
-        } else {
-          // Opponent finished first
-          winnerId = isPlayer1 ? sess.player2_id : sess.player1_id;
-        }
-        const totalXP = (sess.player1_xp || 0) + (sess.player2_xp || 0);
+      // First to reach finish wins — mark session finished immediately
+      const totalXP = (sess.player1_xp || 0) + (sess.player2_xp || 0);
+      // Only mark finished if not already done by opponent
+      if (sess.status !== "finished") {
+        const winnerId = user.email; // I finished first
         await base44.entities.MultiplayerSession.update(mpSession.id, {
           status: "finished",
           winner_id: winnerId
         });
-        // Award XP only to winner
-        const iWon = winnerId === user.email;
-        const myXP = iWon ? totalXP : 0;
-        if (profile && iWon) {
-          const newXP = (profile.xp || 0) + myXP;
+        // Award XP to winner
+        if (profile) {
+          const newXP = (profile.xp || 0) + totalXP;
           await base44.entities.UserProfile.update(profile.id, {
             xp: newXP, level: Math.floor(newXP / 200) + 1,
             total_questions_answered: (profile.total_questions_answered || 0) + finalStats.total,
             total_correct: (profile.total_correct || 0) + finalStats.correct,
           });
         }
-        setMpOver({ winner_id: winnerId, iWon, myXP, totalXP });
+        setMpOver({ winner_id: user.email, iWon: true, totalXP });
         setPhase("mpover");
-        return;
       }
-      // Still waiting for opponent — show waiting state briefly then transition
-      setPhase("mpover");
       return;
     }
 
