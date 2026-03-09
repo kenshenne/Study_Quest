@@ -323,13 +323,13 @@ export default function BlastGame() {
   };
 
   const handleKeyDown = useCallback((e) => {
-    if (phase !== "playing" || activeQuestion || locked) return;
+    if (phase !== "playing") return;
     if (e.key === "ArrowLeft") { e.preventDefault(); movePiece(-1, 0); }
     else if (e.key === "ArrowRight") { e.preventDefault(); movePiece(1, 0); }
     else if (e.key === "ArrowDown") { e.preventDefault(); movePiece(0, 1); }
     else if (e.key === "ArrowUp") { e.preventDefault(); rotatePiece(); }
     else if (e.key === " ") { e.preventDefault(); hardDrop(); }
-  }, [phase, activeQuestion, locked, movePiece, rotatePiece, hardDrop]);
+  }, [phase, movePiece, rotatePiece, hardDrop]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
