@@ -552,7 +552,7 @@ export default function MazeGame() {
           {mpSession && (
             <span className="text-violet-300 font-semibold">Opp: {opponentCheckpoints} ✓ {opponentFinished ? "🏁" : ""}</span>
           )}
-          <span>✅ {gameStats.correct}</span>
+          <span>✅ {gameStats.correct}/{MIN_CORRECT[difficulty]}</span>
           <span>❌ {gameStats.incorrect}</span>
           <span>📍 {visitedCheckpoints.size}/{checkpoints.length}</span>
         </div>
