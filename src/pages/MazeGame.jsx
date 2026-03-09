@@ -154,8 +154,8 @@ export default function MazeGame() {
     setFriends(all.flat());
   };
 
-  // ── MULTIPLAYER POLLING ──────────────────────────────────────────────────────
-  const startMpPolling = useCallback((sessionId, myIsP1) => {
+  // ── MULTIPLAYER POLLING (500ms for near-real-time updates) ──────────────────
+  const startMpPolling = useCallback((sessionId, myIsP1, myUserEmail) => {
     if (mpPollRef.current) clearInterval(mpPollRef.current);
     mpPollRef.current = setInterval(async () => {
       const sessions = await base44.entities.MultiplayerSession.filter({ id: sessionId });
@@ -166,13 +166,20 @@ export default function MazeGame() {
       const oppFin = myIsP1 ? s.player2_finished : s.player1_finished;
       if (oppPos) setOpponentPos(oppPos);
       setOpponentCheckpoints(oppCps || 0);
-      if (oppFin && !opponentFinished) setOpponentFinished(true);
-      if (s.status === "finished" && s.winner_id) {
+      if (oppFin) setOpponentFinished(true);
+      // If opponent won but I haven't finished yet — show "you lost" notification
+      // but let me continue or quit
+      if (s.status === "finished" && s.winner_id && s.winner_id !== myUserEmail) {
         clearInterval(mpPollRef.current);
-        setMpOver({ winner_id: s.winner_id, winner_username: myIsP1 ? s.player2_username : s.player1_username, total_xp: (s.player1_xp || 0) + (s.player2_xp || 0) });
+        setOpponentWon(true);
       }
-    }, 2000);
-  }, [opponentFinished]);
+      if (s.status === "finished" && s.winner_id === myUserEmail) {
+        clearInterval(mpPollRef.current);
+        setMpOver({ winner_id: s.winner_id, iWon: true, totalXP: (s.player1_xp || 0) + (s.player2_xp || 0) });
+        setPhase("mpover");
+      }
+    }, 500);
+  }, []);
 
   useEffect(() => () => { if (mpPollRef.current) clearInterval(mpPollRef.current); }, []);
 
