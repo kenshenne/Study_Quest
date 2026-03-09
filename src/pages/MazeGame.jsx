@@ -498,7 +498,7 @@ export default function MazeGame() {
 
   // ── MULTIPLAYER GAME OVER ─────────────────────────────────────────────────────
   if (phase === "mpover" && mpOver) {
-    const iWon = mpOver.winner_id === user?.email;
+    const iWon = mpOver.iWon;
     return (
       <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center p-4">
         <div className="bg-[#13131f] border border-white/10 rounded-2xl p-8 max-w-sm w-full text-center">
@@ -514,7 +514,7 @@ export default function MazeGame() {
             <span className="text-xl font-bold text-yellow-400">{iWon ? `+${mpOver.totalXP}` : "+0"} XP</span>
           </div>
           <div className="flex gap-3">
-            <button onClick={() => { setPhase("setup"); setMpSession(null); setMpOver(null); setPlayMode(null); }} className="flex-1 py-3 bg-white/10 hover:bg-white/15 rounded-xl text-sm font-semibold transition-colors">
+            <button onClick={() => { setPhase("setup"); setMpSession(null); setMpOver(null); setPlayMode(null); setOpponentWon(false); }} className="flex-1 py-3 bg-white/10 hover:bg-white/15 rounded-xl text-sm font-semibold transition-colors">
               Play Again
             </button>
             <a href={createPageUrl("Dashboard")} className="flex-1 py-3 bg-violet-600 hover:bg-violet-500 rounded-xl text-sm font-semibold transition-colors text-center">
