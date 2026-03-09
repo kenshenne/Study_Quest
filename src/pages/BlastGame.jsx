@@ -131,50 +131,104 @@ export default function BlastGame() {
     setTimeout(() => boardRef.current?.focus(), 100);
   };
 
-  // Tick
+  // Keep refs in sync so the tick interval can read latest values without restarting
+  useEffect(() => { pieceRef.current = piece; }, [piece]);
+  useEffect(() => { boardStateRef.current = board; }, [board]);
+  useEffect(() => { lockedRef.current = locked; }, [locked]);
+  useEffect(() => { activeQRef.current = activeQuestion; }, [activeQuestion]);
+
+  // Single stable tick — never restarts, reads from refs
   useEffect(() => {
-    if (phase !== "playing" || activeQuestion || locked) return;
+    if (phase !== "playing") return;
     tickRef.current = setInterval(() => {
-      movePiece(0, 1);
+      if (lockedRef.current || activeQRef.current) return;
+      const p = pieceRef.current;
+      const b = boardStateRef.current;
+      if (!p || !b) return;
+      if (canPlace(b, p, 0, 1)) {
+        setPiece(prev => prev ? { ...prev, y: prev.y + 1 } : prev);
+      } else {
+        // Land piece — set locked immediately via ref to prevent double-land
+        if (lockedRef.current) return;
+        lockedRef.current = true;
+        setLocked(true);
+        const newBoard = placePiece(b, p);
+        const { board: clearedBoard, linesCleared } = clearLines(newBoard);
+        // Use functional state update to read latest questions/qIndex
+        setQuestions(qs => {
+          setQIndex(qi => {
+            if (linesCleared > 0 && qs[qi]) {
+              setPendingBoard(clearedBoard);
+              setActiveQuestion(qs[qi]);
+            } else {
+              finalizeLandImmediate(clearedBoard, linesCleared, qs, qi);
+            }
+            return qi;
+          });
+          return qs;
+        });
+      }
     }, TICK_INTERVAL);
     return () => clearInterval(tickRef.current);
-  }, [phase, piece, board, activeQuestion, locked]);
+  }, [phase]); // Only depends on phase — never restarts due to piece/board changes
+
+  const finalizeLandImmediate = (newBoard, linesCleared, qs, qi) => {
+    setBoard(newBoard);
+    setLines(prev => prev + linesCleared);
+    setScore(prev => prev + linesCleared * 100);
+    const newPiece = randomPiece();
+    const afterNext = randomPiece();
+    if (!canPlace(newBoard, { ...newPiece, x: Math.floor(COLS / 2) - 1, y: 0 })) {
+      setPhase("over");
+      return;
+    }
+    setPiece({ ...newPiece, x: Math.floor(COLS / 2) - 1, y: 0 });
+    setNextPiece(afterNext);
+    lockedRef.current = false;
+    setLocked(false);
+  };
 
   const movePiece = useCallback((dx, dy) => {
-    if (!piece || activeQuestion || locked) return;
-    if (canPlace(board, piece, dx, dy)) {
-      setPiece(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
-    } else if (dy > 0) {
-      // Land piece
-      landPiece();
+    if (lockedRef.current || activeQRef.current) return;
+    const p = pieceRef.current;
+    const b = boardStateRef.current;
+    if (!p || !b) return;
+    if (canPlace(b, p, dx, dy)) {
+      setPiece(prev => prev ? { ...prev, x: prev.x + dx, y: prev.y + dy } : prev);
     }
-  }, [piece, board, activeQuestion, locked]);
+    // Note: horizontal moves never land the piece — only the tick does that
+  }, []);
 
   const rotatePiece = useCallback(() => {
-    if (!piece || activeQuestion || locked) return;
-    const rotated = piece.shape[0].map((_, i) => piece.shape.map(row => row[i]).reverse());
-    const rotatedPiece = { ...piece, shape: rotated };
-    if (canPlace(board, rotatedPiece)) {
+    if (lockedRef.current || activeQRef.current) return;
+    const p = pieceRef.current;
+    const b = boardStateRef.current;
+    if (!p || !b) return;
+    const rotated = p.shape[0].map((_, i) => p.shape.map(row => row[i]).reverse());
+    const rotatedPiece = { ...p, shape: rotated };
+    if (canPlace(b, rotatedPiece)) {
       setPiece(rotatedPiece);
     }
-  }, [piece, board, activeQuestion, locked]);
+  }, []);
 
   const hardDrop = useCallback(() => {
-    if (!piece || activeQuestion || locked) return;
+    if (lockedRef.current || activeQRef.current) return;
+    const p = pieceRef.current;
+    const b = boardStateRef.current;
+    if (!p || !b) return;
     let dy = 0;
-    while (canPlace(board, piece, 0, dy + 1)) dy++;
-    if (dy > 0) {
-      setPiece(prev => ({ ...prev, y: prev.y + dy }));
-      setTimeout(() => landPiece(), 50);
-    } else {
-      landPiece();
-    }
-  }, [piece, board, activeQuestion, locked]);
+    while (canPlace(b, p, 0, dy + 1)) dy++;
+    setPiece(prev => prev ? { ...prev, y: prev.y + dy } : prev);
+  }, []);
 
   const landPiece = useCallback(() => {
-    if (!piece) return;
+    const p = pieceRef.current;
+    const b = boardStateRef.current;
+    if (!p) return;
+    if (lockedRef.current) return;
+    lockedRef.current = true;
     setLocked(true);
-    const newBoard = placePiece(board, piece);
+    const newBoard = placePiece(b, p);
     const { board: clearedBoard, linesCleared } = clearLines(newBoard);
 
     if (linesCleared > 0) {
