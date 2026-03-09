@@ -222,28 +222,28 @@ export default function BlastGame() {
   }, []);
 
   const landPiece = useCallback(() => {
+    // This is kept for hardDrop usage only; tick uses the inline logic
     const p = pieceRef.current;
     const b = boardStateRef.current;
-    if (!p) return;
+    if (!p || !b) return;
     if (lockedRef.current) return;
     lockedRef.current = true;
     setLocked(true);
     const newBoard = placePiece(b, p);
     const { board: clearedBoard, linesCleared } = clearLines(newBoard);
-
-    if (linesCleared > 0) {
-      // Trigger question for cleared lines
-      const q = questions[qIndex];
-      if (q) {
-        setPendingBoard(clearedBoard);
-        setActiveQuestion(q);
-        return;
-      }
-      finalizeLand(clearedBoard, linesCleared);
-    } else {
-      finalizeLand(clearedBoard, 0);
-    }
-  }, [piece, board, questions, qIndex]);
+    setQuestions(qs => {
+      setQIndex(qi => {
+        if (linesCleared > 0 && qs[qi]) {
+          setPendingBoard(clearedBoard);
+          setActiveQuestion(qs[qi]);
+        } else {
+          finalizeLandImmediate(clearedBoard, linesCleared, qs, qi);
+        }
+        return qi;
+      });
+      return qs;
+    });
+  }, []);
 
   const finalizeLand = (newBoard, linesCleared) => {
     setBoard(newBoard);
