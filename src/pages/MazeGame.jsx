@@ -310,10 +310,14 @@ export default function MazeGame() {
       if (q) setActiveQuestion(q);
     }
 
-    if (nr === ROWS - 1 && nc === COLS - 1 && visitedCheckpoints.size >= checkpoints.length) {
-      endGame();
+    if (nr === ROWS - 1 && nc === COLS - 1) {
+      const minCorrect = MIN_CORRECT[difficulty] || 5;
+      // Only allow finish if min correct answers met AND all checkpoints visited
+      if (gameStats.correct >= minCorrect && visitedCheckpoints.size >= checkpoints.length) {
+        endGame();
+      }
     }
-  }, [phase, activeQuestion, player, maze, checkpoints, visitedCheckpoints, qIndex, questions, mpSession, isPlayer1]);
+  }, [phase, activeQuestion, player, maze, checkpoints, visitedCheckpoints, qIndex, questions, mpSession, isPlayer1, gameStats, difficulty]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
