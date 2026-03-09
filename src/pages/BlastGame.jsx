@@ -293,6 +293,7 @@ export default function BlastGame() {
 
   const endGame = async (finalStats = gameStats) => {
     clearInterval(tickRef.current);
+    setPhase("over");
     try {
       const sessionData = {
         score, xp_earned: finalStats.xp, total_questions: finalStats.total,
