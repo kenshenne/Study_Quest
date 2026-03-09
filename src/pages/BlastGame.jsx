@@ -10,8 +10,8 @@ import MaterialSelector from "../components/game/MaterialSelector";
 import AchievementToast from "../components/achievements/AchievementToast";
 import { checkAndAwardAchievements } from "../components/achievements/achievementsLib";
 
-const COLS = 8;
-const ROWS = 14;
+const COLS = 10;
+const ROWS = 16;
 const TICK_INTERVAL = 600; // ms between drops (fast)
 
 const PIECES = [

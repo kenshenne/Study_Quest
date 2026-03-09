@@ -86,6 +86,24 @@ function placeCheckpoints(maze, questions) {
 const P1_START = { r: 0, c: 0 };
 const P2_START = { r: 0, c: COLS - 1 };
 
+const MIN_CORRECT = { easy: 5, medium: 10, hard: 15 };
+
+function findFreeCell(existingCheckpoints, playerPos) {
+  const occupied = new Set([
+    '0,0', `${ROWS-1},${COLS-1}`,
+    `${playerPos.r},${playerPos.c}`,
+    ...existingCheckpoints.map(cp => `${cp.r},${cp.c}`)
+  ]);
+  const free = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (!occupied.has(`${r},${c}`)) free.push({ r, c });
+    }
+  }
+  if (!free.length) return null;
+  return free[Math.floor(Math.random() * free.length)];
+}
+
 export default function MazeGame() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
