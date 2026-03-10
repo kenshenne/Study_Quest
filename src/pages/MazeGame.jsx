@@ -361,15 +361,23 @@ export default function MazeGame() {
     }
 
     if (!correct) {
-      // Teleport player to random position
-      const nr = Math.floor(Math.random() * ROWS);
-      const nc = Math.floor(Math.random() * COLS);
+      // Teleport player to a random non-finish cell
+      let nr, nc;
+      do {
+        nr = Math.floor(Math.random() * ROWS);
+        nc = Math.floor(Math.random() * COLS);
+      } while (nr === ROWS - 1 && nc === COLS - 1);
       const newPlayerPos = { r: nr, c: nc };
       setPlayer(newPlayerPos);
-      // Add a new question (re-queue from pool) and a new checkpoint
+      // Sync new position in multiplayer
+      if (mpSession) {
+        const field = isPlayer1 ? "player1_pos" : "player2_pos";
+        base44.entities.MultiplayerSession.update(mpSession.id, { [field]: newPlayerPos }).catch(() => {});
+      }
+      // Always add an extra question and checkpoint so the minimum is reachable
       setQuestions(prev => {
-        const extra = [...prev].sort(() => Math.random() - 0.5)[0];
-        return extra ? [...prev, extra] : prev;
+        const randomQ = prev[Math.floor(Math.random() * prev.length)];
+        return randomQ ? [...prev, { ...randomQ, _key: Date.now() }] : prev;
       });
       setCheckpoints(prev => {
         const newCp = findFreeCell(prev, newPlayerPos);
