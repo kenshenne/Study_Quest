@@ -509,7 +509,7 @@ export default function MazeGame() {
     const iWon = mpOver.iWon;
     return (
       <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center p-4">
-        <div className="bg-[#13131f] border border-white/10 rounded-2xl p-8 max-w-sm w-full text-center">
+        <div className="bg-[#13131f] border border-white/10 rounded-2xl p-8 max-w-sm w-full text-center text-white">
           <div className="text-5xl mb-4">{iWon ? "🏆" : "😔"}</div>
           <h2 className="text-2xl font-bold mb-2">{iWon ? "You Win!" : "You Lose"}</h2>
           <p className="text-white/50 text-sm mb-6">

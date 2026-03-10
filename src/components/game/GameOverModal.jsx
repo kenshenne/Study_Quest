@@ -10,7 +10,7 @@ export default function GameOverModal({ stats, onRestart, gameType }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-[#13131f] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl">
+      <div className="bg-[#13131f] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl text-white">
         <div className="p-6 text-center border-b border-white/5">
           <div className="w-16 h-16 rounded-2xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center mx-auto mb-4">
             <Trophy className="w-8 h-8 text-yellow-400" />

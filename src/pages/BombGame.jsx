@@ -314,7 +314,7 @@ export default function BombGame() {
     return (
       <>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#13131f] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl">
+          <div className="bg-[#13131f] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl text-white">
             <div className="p-6 text-center border-b border-white/5">
               <div className="text-6xl mb-4">{won ? "🏆" : "💣"}</div>
               <h2 className="text-2xl font-bold mb-1">{won ? "Excellent! You won the game!" : "Better luck next time! You lost the game."}</h2>
