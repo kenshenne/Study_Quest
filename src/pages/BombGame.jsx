@@ -106,9 +106,8 @@ export default function BombGame() {
     setPhase("playing");
   };
 
-  const setupLevel = (lvlIdx, allQs, used, diff) => {
-    const base = DIFFICULTY_GRID[diff || difficulty];
-    const cfg = { ...base, label: LEVEL_CONFIGS[Math.min(lvlIdx, LEVEL_CONFIGS.length - 1)].label };
+  const setupLevel = (allQs, used, diff) => {
+    const cfg = DIFFICULTY_GRID[diff || difficulty];
     setLevelConfig(cfg);
     setGrid(generateGrid(cfg.cols, cfg.rows, cfg.bombs));
     setRevealedCount(0);
