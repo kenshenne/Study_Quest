@@ -68,7 +68,7 @@ export default function BombGame() {
   const [usedQuestions, setUsedQuestions] = useState([]);
   const [currentLevel, setCurrentLevel] = useState(0);
   const [grid, setGrid] = useState([]);
-  const [levelConfig, setLevelConfig] = useState(LEVEL_CONFIGS[0]);
+  const [levelConfig, setLevelConfig] = useState({ cols: 7, rows: 7, bombs: 9, label: "Level 1" });
   const [activeQuestion, setActiveQuestion] = useState(null);
   const [pendingCell, setPendingCell] = useState(null);
   const [isDoubleXP, setIsDoubleXP] = useState(false);
