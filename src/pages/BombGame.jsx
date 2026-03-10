@@ -336,9 +336,46 @@ export default function BombGame() {
   }
 
   if (phase === "over") {
+    const won = gameStats.incorrect === 0 && gameStats.total > 0;
     return (
       <>
-        <GameOverModal stats={gameStats} onRestart={() => { setSessionId(null); setPhase("setup"); }} gameType="bomb" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-[#13131f] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl">
+            <div className="p-6 text-center border-b border-white/5">
+              <div className={`text-6xl mb-4`}>{won ? "🏆" : "💣"}</div>
+              <h2 className="text-2xl font-bold mb-1">{won ? "You Won!" : "Game Over!"}</h2>
+              <p className="text-white/40 text-sm">Bomb Grid · {difficulty}</p>
+            </div>
+            <div className="p-6 grid grid-cols-3 gap-3 text-center border-b border-white/5">
+              <div className="bg-white/5 rounded-xl p-3">
+                <div className="text-2xl font-bold text-emerald-400">{gameStats.correct}</div>
+                <div className="text-xs text-white/40 mt-1">Correct</div>
+              </div>
+              <div className="bg-white/5 rounded-xl p-3">
+                <div className="text-2xl font-bold text-rose-400">{gameStats.incorrect}</div>
+                <div className="text-xs text-white/40 mt-1">Incorrect</div>
+              </div>
+              <div className="bg-white/5 rounded-xl p-3">
+                <div className="text-2xl font-bold text-violet-400">+{gameStats.xp}</div>
+                <div className="text-xs text-white/40 mt-1">XP</div>
+              </div>
+            </div>
+            <div className="p-5 flex gap-3">
+              <button
+                onClick={() => { setSessionId(null); setPhase("setup"); }}
+                className="flex-1 py-3 bg-white/10 hover:bg-white/15 rounded-xl text-sm font-semibold transition-colors"
+              >
+                🔄 Play Again
+              </button>
+              <a
+                href={createPageUrl("Dashboard")}
+                className="flex-1 py-3 bg-violet-600 hover:bg-violet-500 rounded-xl text-sm font-semibold transition-colors text-center"
+              >
+                🏠 Exit Game
+              </a>
+            </div>
+          </div>
+        </div>
         {newAchievements.map((a, i) => (
           <AchievementToast key={a.id || i} achievement={a} onDone={() => setNewAchievements(prev => prev.slice(1))} />
         ))}
