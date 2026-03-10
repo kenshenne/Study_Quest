@@ -167,16 +167,19 @@ export default function MazeGame() {
       if (oppPos) setOpponentPos(oppPos);
       setOpponentCheckpoints(oppCps || 0);
       if (oppFin) setOpponentFinished(true);
-      // If opponent won but I haven't finished yet — show "you lost" notification
-      // but let me continue or quit
-      if (s.status === "finished" && s.winner_id && s.winner_id !== myUserEmail) {
+
+      if (s.status === "finished") {
         clearInterval(mpPollRef.current);
-        setOpponentWon(true);
-      }
-      if (s.status === "finished" && s.winner_id === myUserEmail) {
-        clearInterval(mpPollRef.current);
-        setMpOver({ winner_id: s.winner_id, iWon: true, totalXP: (s.player1_xp || 0) + (s.player2_xp || 0) });
-        setPhase("mpover");
+        const totalXP = (s.player1_xp || 0) + (s.player2_xp || 0);
+        if (s.winner_id === myUserEmail) {
+          // I won — show win screen
+          setMpOver({ iWon: true, totalXP });
+          setPhase("mpover");
+        } else {
+          // Opponent won — show lose overlay (let them choose Play Again / Exit)
+          setMpOver({ iWon: false, totalXP: 0 });
+          setOpponentWon(true);
+        }
       }
     }, 500);
   }, []);
