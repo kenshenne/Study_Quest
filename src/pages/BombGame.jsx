@@ -262,7 +262,7 @@ export default function BombGame() {
         incorrect_answers: finalStats.incorrect,
         completed: true,
         mistakes_review: finalStats.mistakes,
-        level_reached: currentLevel + 1
+        level_reached: 1
       };
       if (sessionId) {
         await base44.entities.GameSession.update(sessionId, sessionData);
