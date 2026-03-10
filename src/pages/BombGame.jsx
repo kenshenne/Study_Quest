@@ -207,23 +207,27 @@ export default function BombGame() {
     setRevealedCount(prev => prev + 1);
   };
 
-  const checkLevelComplete = () => {
-    const safeCells = grid.filter(c => !c.isBomb).length;
-    const revealed = grid.filter(c => c.revealed && !c.isBomb).length;
-    const flaggedBombs = grid.filter(c => c.isBomb && c.flagged).length;
-    const totalBombs = grid.filter(c => c.isBomb).length;
+  const checkLevelComplete = (currentGrid, currentUsed) => {
+    const g = currentGrid || grid;
+    const used = currentUsed || usedQuestions;
+    const safeCells = g.filter(c => !c.isBomb).length;
+    const revealed = g.filter(c => c.revealed && !c.isBomb).length;
+    const flaggedBombs = g.filter(c => c.isBomb && c.flagged).length;
+    const totalBombs = g.filter(c => c.isBomb).length;
+    const allSafeRevealed = revealed >= safeCells;
+    const allBombsFlagged = flaggedBombs >= totalBombs;
 
-    if (revealed >= safeCells || flaggedBombs >= totalBombs) {
-      // Check if more levels and questions remain
+    if (allSafeRevealed || allBombsFlagged) {
       const nextLevel = currentLevel + 1;
-      const remainingQs = questions.filter(q => !usedQuestions.includes(q.id));
-      if (remainingQs.length > 0) {
+      const remainingQs = questions.filter(q => !used.includes(q.id));
+      if (nextLevel < LEVEL_CONFIGS.length && remainingQs.length > 0) {
         setTimeout(() => {
           setCurrentLevel(nextLevel);
-          setupLevel(nextLevel, questions, usedQuestions);
+          setupLevel(nextLevel, questions, used);
         }, 800);
       } else {
-        endGame();
+        // All levels done — end game
+        setTimeout(() => endGame(), 500);
       }
     }
   };
