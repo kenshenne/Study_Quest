@@ -79,12 +79,15 @@ export default function Profile() {
 
   const searchFriends = async () => {
     if (!searchQuery.trim()) return;
-    // Search by username or email
-    const byUsername = await base44.entities.UserProfile.filter({ username: searchQuery.trim() });
-    const byEmail = await base44.entities.UserProfile.filter({ user_id: searchQuery.trim() });
-    const combined = [...byUsername, ...byEmail].filter(p => p.user_id !== user.email);
-    const unique = combined.filter((p, i, arr) => arr.findIndex(x => x.id === p.id) === i);
-    setSearchResults(unique);
+    const q = searchQuery.trim();
+    // Fetch a broader list and filter client-side for case-insensitive matching
+    const allProfiles = await base44.entities.UserProfile.list("-created_date", 200);
+    const lq = q.toLowerCase();
+    const combined = allProfiles.filter(p =>
+      p.user_id !== user.email &&
+      (p.username?.toLowerCase().includes(lq) || p.user_id?.toLowerCase().includes(lq))
+    );
+    setSearchResults(combined);
   };
 
   const sendFriendRequest = async (targetProfile) => {
