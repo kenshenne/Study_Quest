@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { CheckCircle, XCircle, X, Lightbulb } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import { CheckCircle, XCircle, X, Lightbulb, Loader2 } from "lucide-react";
 
 export default function QuestionModal({ question, onAnswer, onClose, showHint = false, doubleXP = false }) {
   const [selected, setSelected] = useState(null);
@@ -8,8 +9,8 @@ export default function QuestionModal({ question, onAnswer, onClose, showHint = 
   const [isCorrect, setIsCorrect] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [hintVisible, setHintVisible] = useState(false);
+  const [validating, setValidating] = useState(false);
 
-  // Randomize options once per question render
   const shuffledOptions = useMemo(() => {
     if (!question?.options?.length) return question?.options || [];
     return [...question.options].sort(() => Math.random() - 0.5);
@@ -17,15 +18,49 @@ export default function QuestionModal({ question, onAnswer, onClose, showHint = 
 
   if (!question) return null;
 
-  const handleSubmit = () => {
-    let answer = "";
-    if (question.question_type === "multiple_choice") answer = selected;
-    else answer = textAnswer.trim();
-
+  const handleSubmit = async () => {
+    const answer = question.question_type === "multiple_choice" ? selected : textAnswer.trim();
     if (!answer) return;
 
-    const correct = answer.toLowerCase() === question.correct_answer.toLowerCase() ||
-      (question.question_type === "multiple_choice" && answer === question.correct_answer);
+    setValidating(true);
+    let correct = false;
+
+    if (question.question_type === "multiple_choice") {
+      correct = answer.toLowerCase() === question.correct_answer.toLowerCase() || answer === question.correct_answer;
+    } else {
+      // Use LLM for semantic validation of fill_blank and enumeration
+      try {
+        const result = await base44.integrations.Core.InvokeLLM({
+          prompt: `You are a quiz answer validator for a student learning app. Be lenient and educational.
+
+Question: "${question.question_text}"
+Correct answer: "${question.correct_answer}"
+Student's answer: "${answer}"
+
+Rules for acceptance:
+- Ignore case differences (uppercase/lowercase don't matter)
+- Allow minor spelling variations and typos
+- Accept synonyms with the same meaning
+- For enumeration questions: all key concepts must be present, order doesn't matter, partial matches per item are OK
+- Accept if the core idea/keyword/concept is correctly conveyed
+- Do NOT penalize for extra words or slightly different phrasing
+
+Is the student's answer correct?`,
+          response_json_schema: {
+            type: "object",
+            properties: { is_correct: { type: "boolean" } },
+            required: ["is_correct"]
+          }
+        });
+        correct = result.is_correct;
+      } catch {
+        // Fallback: case-insensitive comparison
+        const norm = (s) => s.toLowerCase().trim().replace(/[^\w\s]/g, "").replace(/\s+/g, " ");
+        correct = norm(answer) === norm(question.correct_answer);
+      }
+    }
+
+    setValidating(false);
     setIsCorrect(correct);
     setSubmitted(true);
     if (!correct) setShowExplanation(true);
@@ -102,17 +137,22 @@ export default function QuestionModal({ question, onAnswer, onClose, showHint = 
                 <textarea
                   value={textAnswer}
                   onChange={e => setTextAnswer(e.target.value)}
-                  placeholder="Type your answer..."
+                  placeholder={question.question_type === "enumeration" ? "List each item (comma or newline separated)..." : "Type your answer..."}
                   rows={3}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-violet-500 resize-none text-sm"
                 />
               )}
               <button
                 onClick={handleSubmit}
-                disabled={question.question_type === "multiple_choice" ? !selected : !textAnswer.trim()}
-                className="w-full py-3 bg-violet-600 hover:bg-violet-500 disabled:bg-white/10 disabled:cursor-not-allowed rounded-xl font-semibold text-sm transition-colors"
+                disabled={validating || (question.question_type === "multiple_choice" ? !selected : !textAnswer.trim())}
+                className="w-full py-3 bg-violet-600 hover:bg-violet-500 disabled:bg-white/10 disabled:cursor-not-allowed rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2"
               >
-                Submit Answer
+                {validating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Checking answer...
+                  </>
+                ) : "Submit Answer"}
               </button>
             </>
           )}
@@ -121,12 +161,18 @@ export default function QuestionModal({ question, onAnswer, onClose, showHint = 
           {submitted && (
             <div className="space-y-3">
               <div className={`flex items-center gap-3 p-4 rounded-xl ${isCorrect ? "bg-emerald-500/10 border border-emerald-500/30" : "bg-rose-500/10 border border-rose-500/30"}`}>
-                {isCorrect ? <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" /> : <XCircle className="w-5 h-5 text-rose-400 shrink-0" />}
+                {isCorrect
+                  ? <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
+                  : <XCircle className="w-5 h-5 text-rose-400 shrink-0" />}
                 <div>
                   <p className={`font-semibold text-sm ${isCorrect ? "text-emerald-400" : "text-rose-400"}`}>
                     {isCorrect ? (doubleXP ? "Correct! Double XP earned!" : "Correct! Well done!") : "Incorrect"}
                   </p>
-                  {!isCorrect && <p className="text-xs text-white/60 mt-0.5">Correct: <span className="text-white">{question.correct_answer}</span></p>}
+                  {!isCorrect && (
+                    <p className="text-xs text-white/60 mt-0.5">
+                      Correct: <span className="text-white">{question.correct_answer}</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
