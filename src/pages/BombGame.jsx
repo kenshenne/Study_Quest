@@ -272,10 +272,10 @@ export default function BombGame() {
     // Check if all questions are used
     const remainingQs = questions.filter(q2 => !newUsed.includes(q2.id));
     if (remainingQs.length === 0) {
-      endGame(newStats);
+      setTimeout(() => endGame(newStats), 400);
       return;
     }
-    setTimeout(() => checkLevelComplete(), 300);
+    setTimeout(() => checkLevelComplete(null, newUsed), 300);
   };
 
   const endGame = async (finalStats = gameStats) => {
