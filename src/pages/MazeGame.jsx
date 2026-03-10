@@ -393,37 +393,34 @@ export default function MazeGame() {
     const time = Math.floor((Date.now() - startTime) / 1000);
 
     if (mpSession) {
-      // Mark this player as finished and save their XP
       const finField = isPlayer1 ? "player1_finished" : "player2_finished";
       const xpField = isPlayer1 ? "player1_xp" : "player2_xp";
+
+      // Fetch current session state
+      const [sess] = await base44.entities.MultiplayerSession.filter({ id: mpSession.id });
+
+      // If session already finished (opponent won), polling will handle the UI — just exit
+      if (sess?.status === "finished") return;
+
+      // Mark myself finished and save XP
       await base44.entities.MultiplayerSession.update(mpSession.id, {
         [finField]: true,
-        [xpField]: finalStats.xp
+        [xpField]: finalStats.xp,
+        status: "finished",
+        winner_id: user.email  // I finished first — I win
       });
 
-      // Fetch latest session to see if opponent also finished
-      const [sess] = await base44.entities.MultiplayerSession.filter({ id: mpSession.id });
-      const bothFinished = sess.player1_finished && sess.player2_finished;
-
-      // First to reach finish wins — mark session finished immediately
-      const totalXP = (sess.player1_xp || 0) + (sess.player2_xp || 0);
-      // Only mark finished if not already done by opponent
-      if (sess.status !== "finished") {
-        const winnerId = user.email; // I finished first
-        await base44.entities.MultiplayerSession.update(mpSession.id, {
-          status: "finished",
-          winner_id: winnerId
+      // Award XP to winner
+      if (profile) {
+        const totalXP = finalStats.xp + (isPlayer1 ? (sess?.player2_xp || 0) : (sess?.player1_xp || 0));
+        const newXP = (profile.xp || 0) + totalXP;
+        await base44.entities.UserProfile.update(profile.id, {
+          xp: newXP, level: Math.floor(newXP / 200) + 1,
+          total_questions_answered: (profile.total_questions_answered || 0) + finalStats.total,
+          total_correct: (profile.total_correct || 0) + finalStats.correct,
         });
-        // Award XP to winner
-        if (profile) {
-          const newXP = (profile.xp || 0) + totalXP;
-          await base44.entities.UserProfile.update(profile.id, {
-            xp: newXP, level: Math.floor(newXP / 200) + 1,
-            total_questions_answered: (profile.total_questions_answered || 0) + finalStats.total,
-            total_correct: (profile.total_correct || 0) + finalStats.correct,
-          });
-        }
-        setMpOver({ winner_id: user.email, iWon: true, totalXP });
+        clearInterval(mpPollRef.current);
+        setMpOver({ iWon: true, totalXP });
         setPhase("mpover");
       }
       return;
