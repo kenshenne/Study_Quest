@@ -367,7 +367,7 @@ export default function BombGame() {
           <button onPointerDown={() => endGame()} className="text-white/60 hover:text-white transition-colors flex items-center gap-1.5 text-sm px-3 py-2 bg-white/10 rounded-xl touch-manipulation active:bg-white/20">
             <ArrowLeft className="w-4 h-4" /> Exit
           </button>
-          <span className="font-bold text-sm">{LEVEL_CONFIGS[Math.min(currentLevel, LEVEL_CONFIGS.length - 1)].label}</span>
+          <span className="font-bold text-sm">Bomb Grid</span>
         </div>
         <div className="flex items-center gap-4 text-xs text-white/50">
           <span className="flex items-center gap-1"><Flag className="w-3 h-3 text-rose-400" />{bombsLeft}</span>
