@@ -86,8 +86,7 @@ export default function BombGame() {
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
     setQuestions(shuffled);
     setUsedQuestions([]);
-    setCurrentLevel(0);
-    setupLevel(0, shuffled, [], difficulty);
+    setupLevel(shuffled, [], difficulty);
     const stats = { correct: 0, incorrect: 0, total: 0, xp: 0, mistakes: [] };
     setGameStats(stats);
     // Create session immediately so partial games are saved
