@@ -631,26 +631,32 @@ export default function MazeGame() {
         </div>
       </div>
 
-      {/* Opponent Won — notify loser with continue/quit options */}
-      {opponentWon && !activeQuestion && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+      {/* Opponent Won — notify loser with options */}
+      {opponentWon && (
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
           <div className="bg-[#13131f] border border-rose-500/30 rounded-2xl p-8 max-w-sm w-full text-center">
-            <div className="text-5xl mb-4">😔</div>
+            <div className="text-6xl mb-4">😔</div>
             <h2 className="text-2xl font-bold mb-2 text-rose-400">You Lost!</h2>
-            <p className="text-white/50 text-sm mb-6">Your opponent reached the finish line first. You can keep playing to finish your run, or quit and start a new match.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setOpponentWon(false)}
-                className="flex-1 py-3 bg-violet-600 hover:bg-violet-500 rounded-xl text-sm font-semibold transition-colors"
-              >
-                Continue Playing
-              </button>
+            <p className="text-white/50 text-sm mb-6">Your opponent reached the finish line first. Better luck next time!</p>
+            <div className="space-y-2">
               <button
                 onClick={() => { setPhase("setup"); setMpSession(null); setMpOver(null); setPlayMode(null); setOpponentWon(false); }}
-                className="flex-1 py-3 bg-white/10 hover:bg-white/15 rounded-xl text-sm font-semibold transition-colors"
+                className="w-full py-3 bg-violet-600 hover:bg-violet-500 rounded-xl text-sm font-semibold transition-colors"
               >
-                Quit Game
+                🔄 Play Again / Rematch
               </button>
+              <button
+                onClick={() => setOpponentWon(false)}
+                className="w-full py-3 bg-white/10 hover:bg-white/15 rounded-xl text-sm font-semibold transition-colors"
+              >
+                👀 Continue Watching
+              </button>
+              <a
+                href={createPageUrl("Dashboard")}
+                className="block w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl text-sm font-semibold transition-colors"
+              >
+                🏠 Exit Game
+              </a>
             </div>
           </div>
         </div>
