@@ -45,18 +45,12 @@ function generateGrid(cols, rows, bombCount) {
   return cells;
 }
 
-// Grid sizes by difficulty: easy=5×5, medium=7×7, hard=9×9
+// Grid sizes by difficulty: easy=6×6, medium=8×8, hard=10×10
 const DIFFICULTY_GRID = {
-  easy:   { cols: 5, rows: 5, bombs: 4 },
-  medium: { cols: 7, rows: 7, bombs: 9 },
-  hard:   { cols: 9, rows: 9, bombs: 15 }
+  easy:   { cols: 6, rows: 6, bombs: 5 },
+  medium: { cols: 8, rows: 8, bombs: 12 },
+  hard:   { cols: 10, rows: 10, bombs: 20 }
 };
-
-const LEVEL_CONFIGS = [
-  { label: "Level 1" },
-  { label: "Level 2" },
-  { label: "Level 3" }
-];
 
 export default function BombGame() {
   const [user, setUser] = useState(null);
