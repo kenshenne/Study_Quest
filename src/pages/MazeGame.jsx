@@ -315,8 +315,8 @@ export default function MazeGame() {
 
     if (nr === ROWS - 1 && nc === COLS - 1) {
       const minCorrect = MIN_CORRECT[difficulty] || 5;
-      // Only allow finish if min correct answers met AND all checkpoints visited
-      if (gameStats.correct >= minCorrect && visitedCheckpoints.size >= checkpoints.length) {
+      // Only allow finish if min correct answers met
+      if (gameStats.correct >= minCorrect) {
         endGame();
       }
     }
