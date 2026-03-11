@@ -233,15 +233,15 @@ export default function BombGame() {
     };
     setGameStats(newStats);
 
-    if (correct && pendingCell) {
+    if (pendingCell) {
       if (pendingCell.action === "bomb") {
-        // Allow continue - just reveal the bomb cell visually
+        // Reveal the bomb cell visually regardless of correct/incorrect
         setGrid(prev => {
           const next = [...prev];
           next[pendingCell.index] = { ...next[pendingCell.index], revealed: true };
           return next;
         });
-      } else if (pendingCell.action === "flag_correct") {
+      } else if (pendingCell.action === "flag_correct" && correct) {
         toggleFlag(pendingCell.index);
       }
     }
