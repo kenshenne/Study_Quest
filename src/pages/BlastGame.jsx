@@ -114,6 +114,7 @@ export default function BlastGame() {
     const n = randomPiece();
     setPiece(p);
     setNextPiece(n);
+    nextPieceRef.current = n;
     setScore(0);
     setLines(0);
     setLives(3);
