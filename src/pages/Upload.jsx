@@ -15,6 +15,7 @@ const MAX_PDF_MB = 10;
 const MAX_PPT_MB = 20;
 const MAX_IMAGE_MB = 5;
 const MAX_TEXT_WORDS = 5000;
+const MAX_EXTRACTED_WORDS = 8000; // max words allowed from PDF/PPT extraction
 
 function isTextMeaningful(text) {
   if (!text || text.trim().length < 50) return false;
