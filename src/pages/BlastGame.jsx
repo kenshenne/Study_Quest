@@ -92,6 +92,7 @@ export default function BlastGame() {
   const boardStateRef = useRef(null);
   const lockedRef = useRef(false);
   const activeQRef = useRef(null);
+  const nextPieceRef = useRef(null);
 
   useEffect(() => {
     base44.auth.me().then(u => {

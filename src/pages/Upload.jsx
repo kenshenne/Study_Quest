@@ -11,6 +11,18 @@ import MobileNav from "@/components/layout/MobileNav";
 const STEPS = ["Upload", "Configure", "Generate"];
 
 const QUESTION_COUNT = 45; // generate 35-50 questions (mixed difficulty)
+const MAX_PDF_MB = 10;
+const MAX_PPT_MB = 20;
+const MAX_IMAGE_MB = 5;
+const MAX_TEXT_WORDS = 5000;
+
+function isTextMeaningful(text) {
+  if (!text || text.trim().length < 50) return false;
+  const words = text.trim().split(/\s+/).filter(w => w.length > 0);
+  if (words.length < 15) return false;
+  const realWords = words.filter(w => w.length >= 3 && /[aeiouAEIOU]/.test(w) && /[a-zA-Z]/.test(w));
+  return realWords.length / words.length > 0.4;
+}
 
 function getFileType(file) {
   if (!file) return "text";
