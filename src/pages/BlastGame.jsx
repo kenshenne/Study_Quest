@@ -273,17 +273,6 @@ export default function BlastGame() {
     const newBoard = pendingBoard || boardStateRef.current;
     setPendingBoard(null);
 
-    if (!correct) {
-      if (difficulty === "hard") {
-        endGame(newStats);
-        return;
-      } else if (difficulty === "medium") {
-        const newLives = lives - 1;
-        setLives(newLives);
-        if (newLives <= 0) { endGame(newStats); return; }
-      }
-    }
-
     if (newStats.total >= questions.length) {
       endGame(newStats);
       return;
