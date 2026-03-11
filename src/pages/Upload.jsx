@@ -137,6 +137,11 @@ export default function Upload() {
             setError("The uploaded file does not contain meaningful or valid text for generating questions.");
             setStep(1); return;
           }
+          const extractedWords = extracted.trim().split(/\s+/).filter(w => w.length > 0).length;
+          if (extractedWords > MAX_EXTRACTED_WORDS) {
+            setError(`The uploaded file contains too much text (${extractedWords.toLocaleString()} words). Please upload a smaller document or reduce the content to under ${MAX_EXTRACTED_WORDS.toLocaleString()} words.`);
+            setStep(1); return;
+          }
           content = extracted;
           setExtractedContent(content);
         } else if (fileType === "image") {
