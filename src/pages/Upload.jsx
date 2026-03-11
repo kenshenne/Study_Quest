@@ -462,14 +462,6 @@ Generate exactly ${count} questions now.`;
               />
             </div>
 
-            {/* Summary */}
-            <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl px-4 py-3 flex items-center gap-3">
-              <Zap className="w-4 h-4 text-violet-400 shrink-0" />
-              <p className="text-sm text-white/60">
-                Will generate <span className="text-white font-semibold">{QUESTION_COUNT} questions</span> (easy, medium & hard) — you choose difficulty when you play!
-              </p>
-            </div>
-
             {error && <p className="text-rose-400 text-sm">{error}</p>}
 
             <div className="flex gap-3">
