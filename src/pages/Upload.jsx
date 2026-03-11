@@ -92,7 +92,8 @@ export default function Upload() {
 
   const removeFile = () => { setFile(null); setExtractedContent(""); };
 
-  const canProceedStep0 = file || textContent.trim().length > 20 || extraImages.length > 0;
+  const textWords = textContent.trim().split(/\s+/).filter(w => w.length > 0).length;
+  const canProceedStep0 = file || (textContent.trim().length > 20 && textWords <= MAX_TEXT_WORDS) || extraImages.length > 0;
   const canProceedStep1 = title.trim().length > 0;
 
   const handleNext = async () => {
