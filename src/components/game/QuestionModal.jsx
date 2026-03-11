@@ -83,7 +83,7 @@ Is the student's answer correct?`,
   }[question.question_type] || "";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onKeyDown={e => e.stopPropagation()}>
       <div className="bg-[#13131f] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-white/5">
