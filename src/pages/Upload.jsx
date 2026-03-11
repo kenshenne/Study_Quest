@@ -382,6 +382,14 @@ Generate exactly ${count} questions now.`;
               <div className="flex-1 h-px bg-white/8" />
             </div>
 
+            {/* File size limits info */}
+            <div className="bg-white/3 border border-white/8 rounded-xl px-4 py-3 text-xs text-white/40 space-y-0.5">
+              <p>📄 PDF: Maximum upload size {MAX_PDF_MB} MB</p>
+              <p>📊 PPT: Maximum upload size {MAX_PPT_MB} MB</p>
+              <p>🖼️ Image: Maximum upload size {MAX_IMAGE_MB} MB (1 image only)</p>
+              <p>📝 Text: Maximum {MAX_TEXT_WORDS.toLocaleString()} words</p>
+            </div>
+
             {/* Text Input */}
             <div>
               <label className="text-sm text-white/60 block mb-2">Paste or type your notes</label>
@@ -393,7 +401,12 @@ Generate exactly ${count} questions now.`;
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/25 focus:outline-none focus:border-violet-500 transition-colors resize-none text-sm leading-relaxed"
               />
               {textContent.length > 0 && (
-                <p className="text-xs text-white/30 mt-1 text-right">{textContent.length} characters</p>
+                <div className="flex items-center justify-between mt-1">
+                  <span className={`text-xs ${textWords > MAX_TEXT_WORDS ? "text-rose-400" : "text-white/30"}`}>
+                    {textWords > MAX_TEXT_WORDS ? `Word limit exceeded (${textWords.toLocaleString()} / ${MAX_TEXT_WORDS.toLocaleString()})` : ""}
+                  </span>
+                  <span className="text-xs text-white/30">{textWords.toLocaleString()} / {MAX_TEXT_WORDS.toLocaleString()} words</span>
+                </div>
               )}
             </div>
 
