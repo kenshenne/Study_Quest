@@ -117,6 +117,7 @@ export default function Upload() {
 
     try {
       if (file) {
+        const fileType = getFileType(file);
         setProgressStep("Extracting text from file...");
         setProgressPct(15);
         const { file_url } = await base44.integrations.Core.UploadFile({ file });
@@ -126,26 +127,37 @@ export default function Upload() {
           json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
         });
         if (result.status === "success" && result.output?.text) {
-          content = result.output.text;
+          const extracted = result.output.text;
+          if (!extracted || extracted.trim().length < 50) {
+            setError("No readable text detected in this file. Please upload a document with readable content.");
+            setStep(1); return;
+          }
+          if (!isTextMeaningful(extracted)) {
+            setError("The uploaded file does not contain meaningful or valid text for generating questions.");
+            setStep(1); return;
+          }
+          content = extracted;
           setExtractedContent(content);
+        } else if (fileType === "image") {
+          setError("No readable text detected. The system cannot generate questions from this image.");
+          setStep(1); return;
         }
         setProgressPct(45);
       } else if (extraImages.length > 0) {
-        setProgressStep("Extracting text from images...");
+        setProgressStep("Extracting text from image...");
         setProgressPct(15);
-        const allTexts = [];
-        for (let i = 0; i < extraImages.length; i++) {
-          const { file_url } = await base44.integrations.Core.UploadFile({ file: extraImages[i] });
-          const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
-            file_url,
-            json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
-          });
-          if (result.status === "success" && result.output?.text) allTexts.push(result.output.text);
-          setProgressPct(15 + Math.round(((i + 1) / extraImages.length) * 25));
-        }
-        if (allTexts.length > 0) {
-          content = allTexts.join("\n\n---\n\n");
+        const img = extraImages[0];
+        const { file_url } = await base44.integrations.Core.UploadFile({ file: img });
+        const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+          file_url,
+          json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
+        });
+        if (result.status === "success" && result.output?.text && result.output.text.trim().length >= 50) {
+          content = result.output.text;
           setExtractedContent(content);
+        } else {
+          setError("No readable text detected. The system cannot generate questions from this image.");
+          setStep(1); return;
         }
         setProgressPct(45);
       }
