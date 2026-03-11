@@ -310,7 +310,7 @@ export default function BombGame() {
   }
 
   if (phase === "over") {
-    const won = gameStats.incorrect === 0 && gameStats.total > 0;
+    const won = gameStats.total > 0;
     return (
       <>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
