@@ -78,7 +78,15 @@ export default function Upload() {
   };
 
   const handleFileSelect = (f) => {
+    const type = getFileType(f);
+    const sizeMB = f.size / (1024 * 1024);
+    const maxMB = type === "pdf" ? MAX_PDF_MB : type === "pptx" ? MAX_PPT_MB : MAX_IMAGE_MB;
+    if (sizeMB > maxMB) {
+      setError(`File size exceeds the maximum allowed limit of ${maxMB} MB.`);
+      return;
+    }
     setFile(f);
+    setError("");
     if (!title) setTitle(f.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "));
   };
 
