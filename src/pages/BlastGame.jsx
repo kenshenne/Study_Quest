@@ -137,6 +137,7 @@ export default function BlastGame() {
   useEffect(() => { boardStateRef.current = board; }, [board]);
   useEffect(() => { lockedRef.current = locked; }, [locked]);
   useEffect(() => { activeQRef.current = activeQuestion; }, [activeQuestion]);
+  useEffect(() => { nextPieceRef.current = nextPiece; }, [nextPiece]);
 
   // Single stable tick — never restarts, reads from refs
   useEffect(() => {
