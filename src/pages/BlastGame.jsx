@@ -178,14 +178,17 @@ export default function BlastGame() {
     setBoard(newBoard);
     setLines(prev => prev + linesCleared);
     setScore(prev => prev + linesCleared * 100);
-    const newPiece = randomPiece();
+    // Use the previewed nextPiece as the actual next piece (so preview matches)
+    const promotedPiece = nextPieceRef.current || randomPiece();
     const afterNext = randomPiece();
-    if (!canPlace(newBoard, { ...newPiece, x: Math.floor(COLS / 2) - 1, y: 0 })) {
+    const startPiece = { ...promotedPiece, x: Math.floor(COLS / 2) - Math.floor(promotedPiece.shape[0].length / 2), y: 0 };
+    if (!canPlace(newBoard, startPiece)) {
       setPhase("over");
       return;
     }
-    setPiece({ ...newPiece, x: Math.floor(COLS / 2) - 1, y: 0 });
+    setPiece(startPiece);
     setNextPiece(afterNext);
+    nextPieceRef.current = afterNext;
     lockedRef.current = false;
     setLocked(false);
   };
