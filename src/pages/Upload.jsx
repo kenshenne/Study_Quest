@@ -349,18 +349,27 @@ Generate exactly ${count} questions now.`;
                   <p className="text-xs text-white/30">Supports PDF, PowerPoint, images, text files</p>
                 </>
               )}
-              {/* Multiple images */}
+              {/* Single image upload */}
               {!file && (
                 <div className="mt-3 pt-3 border-t border-white/5">
-                  <label className="text-xs text-white/40 block mb-2">Or upload multiple images</label>
-                  <input id="multiImgInput" type="file" accept=".png,.jpg,.jpeg,.gif,.webp" multiple className="hidden"
-                    onChange={e => setExtraImages(Array.from(e.target.files))} />
+                  <label className="text-xs text-white/40 block mb-2">Or upload an image</label>
+                  <input id="multiImgInput" type="file" accept=".png,.jpg,.jpeg,.gif,.webp" className="hidden"
+                    onChange={e => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length > 1) { setError("Only one image can be uploaded at a time."); return; }
+                      if (files.length === 1) {
+                        const f = files[0];
+                        const sizeMB = f.size / (1024 * 1024);
+                        if (sizeMB > MAX_IMAGE_MB) { setError(`File size exceeds the maximum allowed limit of ${MAX_IMAGE_MB} MB.`); return; }
+                        setExtraImages([f]); setError("");
+                      }
+                    }} />
                   <button type="button" onClick={e => { e.stopPropagation(); document.getElementById("multiImgInput").click(); }}
                     className="px-3 py-1.5 bg-white/8 hover:bg-white/12 rounded-lg text-xs text-white/60 transition-colors">
-                    Select multiple images
+                    Select image
                   </button>
                   {extraImages.length > 0 && (
-                    <p className="text-xs text-emerald-400 mt-1">{extraImages.length} image(s) selected</p>
+                    <p className="text-xs text-emerald-400 mt-1">{extraImages[0].name}</p>
                   )}
                 </div>
               )}
