@@ -284,7 +284,6 @@ Generate exactly ${count} questions now.`;
 
       const response = await base44.integrations.Core.InvokeLLM({
         prompt,
-        model: "gemini_3_pro",
         response_json_schema: {
           type: "object",
           required: ["questions"],
@@ -334,7 +333,16 @@ Generate exactly ${count} questions now.`;
       const mats = await base44.entities.StudyMaterial.filter({ user_id: user.email });
       setMaterials(mats);
     } catch (e) {
-      setError("Something went wrong. Please try again.");
+      const msg = e?.message || "";
+      if (msg.toLowerCase().includes("word") || msg.toLowerCase().includes("limit")) {
+        setError("The uploaded file exceeds the 1,000-word limit. Please shorten the content before generating questions.");
+      } else if (msg.toLowerCase().includes("extract") || msg.toLowerCase().includes("parse")) {
+        setError("Failed to extract text from the uploaded document. Please try a PDF or paste your text directly.");
+      } else if (msg.toLowerCase().includes("network") || msg.toLowerCase().includes("fetch")) {
+        setError("Network error. Please check your connection and try again.");
+      } else {
+        setError("AI service request failed. Please try again in a moment.");
+      }
       setStep(1);
     }
   };
