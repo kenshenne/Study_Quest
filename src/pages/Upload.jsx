@@ -14,8 +14,8 @@ const QUESTION_COUNT = 45; // generate 35-50 questions (mixed difficulty)
 const MAX_PDF_MB = 10;
 const MAX_PPT_MB = 20;
 const MAX_IMAGE_MB = 5;
-const MAX_TEXT_WORDS = 1000;
-const MAX_EXTRACTED_WORDS = 1000; // max words allowed from PDF/PPT extraction
+const MAX_TEXT_WORDS = 2500;
+const MAX_EXTRACTED_WORDS = 2500; // max words allowed from PDF/PPT extraction
 
 function isTextMeaningful(text) {
   if (!text || text.trim().length < 50) return false;
@@ -335,7 +335,7 @@ Generate exactly ${count} questions now.`;
     } catch (e) {
       const msg = e?.message || "";
       if (msg.toLowerCase().includes("word") || msg.toLowerCase().includes("limit")) {
-        setError("The uploaded file exceeds the 1,000-word limit. Please shorten the content before generating questions.");
+        setError("The uploaded file exceeds the 2,500-word limit. Please shorten the content before generating questions.");
       } else if (msg.toLowerCase().includes("extract") || msg.toLowerCase().includes("parse")) {
         setError("Failed to extract text from the uploaded document. Please try a PDF or paste your text directly.");
       } else if (msg.toLowerCase().includes("network") || msg.toLowerCase().includes("fetch")) {
