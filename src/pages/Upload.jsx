@@ -30,8 +30,12 @@ function getFileType(file) {
   const name = file.name.toLowerCase();
   if (name.endsWith(".pdf")) return "pdf";
   if (name.endsWith(".pptx") || name.endsWith(".ppt")) return "pptx";
-  return "image";
+  if (name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".gif") || name.endsWith(".webp")) return "image";
+  return "text"; // .txt, .docx, etc.
 }
+
+// File types supported by ExtractDataFromUploadedFile
+const EXTRACTABLE_TYPES = ["pdf", "pptx", "image"];
 
 function FileIcon({ type }) {
   const icons = { pdf: "📄", pptx: "📊", image: "🖼️", text: "📝" };
