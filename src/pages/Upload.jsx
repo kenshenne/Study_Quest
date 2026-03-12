@@ -132,53 +132,107 @@ export default function Upload() {
     try {
       if (file) {
         const fileType = getFileType(file);
-        setProgressStep("Extracting text from file...");
-        setProgressPct(15);
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        setProgressPct(30);
-        const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
-          file_url,
-          json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
-        });
-        if (result.status === "success" && result.output?.text) {
-          const extracted = result.output.text;
-          if (!extracted || extracted.trim().length < 50) {
-            setError("No readable text detected in this file. Please upload a document with readable content.");
+
+        if (!EXTRACTABLE_TYPES.includes(fileType)) {
+          // For unsupported types like .docx, .txt — read as plain text
+          setProgressStep("Reading file content...");
+          setProgressPct(20);
+          const textFromFile = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result || "");
+            reader.onerror = () => reject(new Error("Failed to read file."));
+            reader.readAsText(file);
+          });
+          if (!textFromFile || textFromFile.trim().length < 50) {
+            setError("Failed to extract text from the uploaded document. Please try a PDF or paste your text directly.");
             setStep(1); return;
           }
-          if (!isTextMeaningful(extracted)) {
-            setError("The uploaded file does not contain meaningful or valid text for generating questions.");
-            setStep(1); return;
-          }
-          const extractedWords = extracted.trim().split(/\s+/).filter(w => w.length > 0).length;
-          if (extractedWords > MAX_EXTRACTED_WORDS) {
-            setError(`The input exceeds the maximum limit of ${MAX_EXTRACTED_WORDS.toLocaleString()} words (found ${extractedWords.toLocaleString()} words). Please upload a smaller document or reduce the content before generating questions.`);
-            setStep(1); return;
-          }
-          content = extracted;
+          content = textFromFile;
           setExtractedContent(content);
-        } else if (fileType === "image") {
-          setError("No readable text detected. The system cannot generate questions from this image.");
-          setStep(1); return;
+          setProgressPct(45);
+        } else {
+          setProgressStep("Extracting text from file...");
+          setProgressPct(15);
+          let file_url;
+          try {
+            const uploadResult = await base44.integrations.Core.UploadFile({ file });
+            file_url = uploadResult.file_url;
+          } catch {
+            setError("Failed to upload the file. Please check your connection and try again.");
+            setStep(1); return;
+          }
+          setProgressPct(30);
+
+          let result;
+          try {
+            result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+              file_url,
+              json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
+            });
+          } catch {
+            setError("Failed to extract text from the uploaded document. Please try a different file.");
+            setStep(1); return;
+          }
+
+          if (result.status === "success" && result.output?.text) {
+            const extracted = result.output.text;
+            if (!extracted || extracted.trim().length < 50) {
+              setError("No readable text detected in this file. Please upload a document with readable content.");
+              setStep(1); return;
+            }
+            if (!isTextMeaningful(extracted)) {
+              setError("The uploaded file does not contain enough meaningful text to generate questions. Please try a different document.");
+              setStep(1); return;
+            }
+            const extractedWords = extracted.trim().split(/\s+/).filter(w => w.length > 0).length;
+            if (extractedWords > MAX_EXTRACTED_WORDS) {
+              setError(`The uploaded file exceeds the ${MAX_EXTRACTED_WORDS.toLocaleString()}-word limit (found ${extractedWords.toLocaleString()} words). Please upload a smaller document.`);
+              setStep(1); return;
+            }
+            content = extracted;
+            setExtractedContent(content);
+          } else {
+            setError("Failed to extract text from the uploaded document. Please ensure it contains readable text.");
+            setStep(1); return;
+          }
+          setProgressPct(45);
         }
-        setProgressPct(45);
       } else if (extraImages.length > 0) {
         setProgressStep("Extracting text from image...");
         setProgressPct(15);
         const img = extraImages[0];
-        const { file_url } = await base44.integrations.Core.UploadFile({ file: img });
-        const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
-          file_url,
-          json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
-        });
+        let file_url;
+        try {
+          const uploadResult = await base44.integrations.Core.UploadFile({ file: img });
+          file_url = uploadResult.file_url;
+        } catch {
+          setError("Failed to upload the image. Please check your connection and try again.");
+          setStep(1); return;
+        }
+        let result;
+        try {
+          result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+            file_url,
+            json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
+          });
+        } catch {
+          setError("Failed to extract text from the image.");
+          setStep(1); return;
+        }
         if (result.status === "success" && result.output?.text && result.output.text.trim().length >= 50) {
           content = result.output.text;
           setExtractedContent(content);
         } else {
-          setError("No readable text detected. The system cannot generate questions from this image.");
+          setError("No readable text detected in the image. Please upload an image with clear, readable text.");
           setStep(1); return;
         }
         setProgressPct(45);
+      }
+
+      // Final check: ensure we have content to send to AI
+      if (!content || content.trim().length < 30) {
+        setError("No content available to generate questions from. Please provide text or upload a valid file.");
+        setStep(1); return;
       }
 
       setProgressStep("Saving material...");
@@ -187,7 +241,7 @@ export default function Upload() {
         user_id: user.email,
         title: title.trim(),
         content,
-        file_type: getFileType(file)
+        file_type: file ? getFileType(file) : "text"
       });
 
       setProgressStep("Analyzing content & generating questions...");
