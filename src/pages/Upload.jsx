@@ -116,6 +116,15 @@ export default function Upload() {
 
     let content = textContent;
 
+    // Validate text input word count before sending to AI
+    if (!file && extraImages.length === 0) {
+      const inputWords = content.trim().split(/\s+/).filter(w => w.length > 0).length;
+      if (inputWords > MAX_TEXT_WORDS) {
+        setError(`The input exceeds the maximum limit of ${MAX_TEXT_WORDS.toLocaleString()} words (found ${inputWords.toLocaleString()} words). Please shorten the content before generating questions.`);
+        setStep(1); return;
+      }
+    }
+
     try {
       if (file) {
         const fileType = getFileType(file);
@@ -139,7 +148,7 @@ export default function Upload() {
           }
           const extractedWords = extracted.trim().split(/\s+/).filter(w => w.length > 0).length;
           if (extractedWords > MAX_EXTRACTED_WORDS) {
-            setError(`The uploaded file contains too much text (${extractedWords.toLocaleString()} words). Please upload a smaller document or reduce the content to under ${MAX_EXTRACTED_WORDS.toLocaleString()} words.`);
+            setError(`The input exceeds the maximum limit of ${MAX_EXTRACTED_WORDS.toLocaleString()} words (found ${extractedWords.toLocaleString()} words). Please upload a smaller document or reduce the content before generating questions.`);
             setStep(1); return;
           }
           content = extracted;
