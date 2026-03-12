@@ -400,8 +400,8 @@ Generate exactly ${count} questions now.`;
 
             {/* File size limits info */}
             <div className="bg-white/3 border border-white/8 rounded-xl px-4 py-3 text-xs text-white/40 space-y-0.5">
-              <p>📄 PDF: Maximum upload size {MAX_PDF_MB} MB · {MAX_EXTRACTED_WORDS.toLocaleString()} words</p>
-              <p>📊 PPT: Maximum upload size {MAX_PPT_MB} MB · {MAX_EXTRACTED_WORDS.toLocaleString()} words</p>
+              <p>📄 PDF: Maximum upload size {MAX_PDF_MB} MB · max {MAX_EXTRACTED_WORDS.toLocaleString()} words</p>
+              <p>📊 PPT: Maximum upload size {MAX_PPT_MB} MB · max {MAX_EXTRACTED_WORDS.toLocaleString()} words</p>
               <p>🖼️ Image: Maximum upload size {MAX_IMAGE_MB} MB (1 image only)</p>
               <p>📝 Text: Maximum {MAX_TEXT_WORDS.toLocaleString()} words</p>
             </div>

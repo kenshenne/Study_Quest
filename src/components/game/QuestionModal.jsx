@@ -31,6 +31,7 @@ export default function QuestionModal({ question, onAnswer, onClose, showHint = 
       // Use LLM for semantic validation of fill_blank and enumeration
       try {
         const result = await base44.integrations.Core.InvokeLLM({
+          model: "gemini_3_pro",
           prompt: `You are a quiz answer validator for a student learning app. Be lenient and educational.
 
 Question: "${question.question_text}"
