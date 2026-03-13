@@ -14,6 +14,7 @@ export default function Dashboard() {
   const [recentSessions, setRecentSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
     loadUser();
@@ -113,7 +114,7 @@ export default function Dashboard() {
               {profile?.avatar || "🎓"}
             </div>
             <div>
-              <h1 className="text-xl md:text-3xl font-bold">Welcome back, {profile?.username || "Scholar"}!</h1>
+              <h1 className="text-xl md:text-3xl font-bold">{isNewUser ? "Welcome" : "Welcome back"}, {profile?.username || "Scholar"}!</h1>
               <p className="text-white/50 mt-1 text-sm">Level {profile?.level || 1} · {profile?.xp || 0} XP total</p>
             </div>
           </div>
