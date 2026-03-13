@@ -30,17 +30,24 @@ export default function Dashboard() {
       ]);
 
       let p;
+      let isNewUser = false;
       if (profiles.length > 0) {
         p = profiles[0];
+        // Increment login count for returning users
+        const newCount = (p.login_count || 0) + 1;
+        p = await base44.entities.UserProfile.update(p.id, { login_count: newCount });
       } else {
+        isNewUser = true;
         p = await base44.entities.UserProfile.create({
           user_id: u.email,
           username: u.full_name || u.email.split("@")[0],
           avatar: "🎓", xp: 0, level: 1, accuracy_rate: 0,
-          total_questions_answered: 0, total_correct: 0, badges: [], friends: []
+          total_questions_answered: 0, total_correct: 0, badges: [], friends: [],
+          login_count: 1
         });
       }
-      setProfile(p);
+      setProfile({ ...p, _isNewUser: isNewUser });
+      setIsNewUser(isNewUser);
       setRecentSessions(sessions);
       setAchievements(achs);
 
@@ -71,7 +78,7 @@ export default function Dashboard() {
   const xpToNextLevel = (profile?.level || 1) * 200;
   const currentXP = (profile?.xp || 0) % xpToNextLevel;
   const xpPercent = Math.min((currentXP / xpToNextLevel) * 100, 100);
-  const gameLabels = { maze: "Maze Quiz", bomb: "Bomb Grid", blast: "Block Blast" };
+  const gameLabels = { maze: "Maze Quiz", bomb: "Bomb Grid", blast: "Tetriquiz" };
 
   const navLinks = [
     { to: "Upload", icon: <Upload className="w-4 h-4" />, label: "Materials" },
