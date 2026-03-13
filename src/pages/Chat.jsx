@@ -282,8 +282,10 @@ export default function Chat() {
           </button>
         ) : null}
         {selectedFriend && !showFriendList ? (
-          <div className="flex items-center gap-2 flex-1">
-            <span className="text-xl">{selectedFriend.avatar || "🎓"}</span>
+        <div className="flex items-center gap-2 flex-1">
+        <span className="text-xl w-8 h-8 rounded-xl overflow-hidden flex items-center justify-center bg-white/10">
+          {selectedFriend.avatar?.startsWith("http") ? <img src={selectedFriend.avatar} alt="" className="w-full h-full object-cover" /> : (selectedFriend.avatar || "🎓")}
+        </span>
             <div>
               <p className="font-semibold text-sm leading-none">{selectedFriend.username}</p>
               <p className="text-xs text-white/40 mt-0.5">{friendStatus}</p>
@@ -319,7 +321,9 @@ export default function Chat() {
                     className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left ${selectedFriend?.id === f.id ? "bg-violet-500/10 border-r-2 border-violet-500" : ""}`}
                   >
                     <div className="relative">
-                      <span className="text-2xl">{f.avatar || "🎓"}</span>
+                      <span className="text-2xl w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center bg-white/10">
+                        {f.avatar?.startsWith("http") ? <img src={f.avatar} alt="" className="w-full h-full object-cover" /> : (f.avatar || "🎓")}
+                      </span>
                       <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#0a0a0f] ${isOnline ? "bg-emerald-400" : "bg-white/20"}`} />
                     </div>
                     <div className="flex-1 min-w-0">
