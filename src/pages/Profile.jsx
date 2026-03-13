@@ -176,7 +176,23 @@ export default function Profile() {
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-3xl">{profile?.avatar || "🎓"}</div>
+              <div className="relative">
+                <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-3xl overflow-hidden">
+                  {profile?.avatar?.startsWith("http") ? (
+                    <img src={profile.avatar} alt="avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    profile?.avatar || "🎓"
+                  )}
+                </div>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute -bottom-1 -right-1 w-6 h-6 bg-violet-600 hover:bg-violet-500 rounded-full flex items-center justify-center transition-colors"
+                  title="Upload photo"
+                >
+                  <Camera className="w-3 h-3 text-white" />
+                </button>
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+              </div>
               <div>
                 <h2 className="text-xl font-bold">{profile?.username || "Scholar"}</h2>
                 <p className="text-white/40 text-sm">{user?.email}</p>
