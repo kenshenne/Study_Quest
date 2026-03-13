@@ -360,7 +360,9 @@ export default function Profile() {
             <div className="space-y-2">
               {friendProfiles.map(f => (
                 <div key={f.id} className="flex items-center gap-3 py-2 border-t border-white/5 first:border-0">
-                  <span className="text-lg">{f.avatar || "🎓"}</span>
+                  <span className="text-lg w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center bg-white/10">
+                    {f.avatar?.startsWith("http") ? <img src={f.avatar} alt="" className="w-full h-full object-cover" /> : (f.avatar || "🎓")}
+                  </span>
                   <span className="text-sm font-medium">{f.username}</span>
                   <span className="ml-auto text-xs text-white/30">Lv.{f.level}</span>
                 </div>
