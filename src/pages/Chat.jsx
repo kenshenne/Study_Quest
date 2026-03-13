@@ -374,11 +374,11 @@ export default function Chat() {
                   return (
                     <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"} group relative`}>
                       <div className={`max-w-[75%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                        {/* Reply preview inside bubble */}
+                        {/* Reply preview inside bubble - visible to BOTH users */}
                         {msg.reply_to_content && (
-                          <div className={`text-xs rounded-t-xl px-3 pt-2 pb-1 w-full ${isMe ? "bg-violet-700/60" : "bg-white/15"} border-l-2 border-violet-400`}>
-                            <p className="font-semibold text-violet-300">{msg.reply_to_username}</p>
-                            <p className="text-white/60 truncate">{msg.reply_to_content}</p>
+                          <div className={`text-xs rounded-t-xl px-3 pt-2 pb-2 w-full border-l-2 border-violet-400 ${isMe ? "bg-violet-700/60" : "bg-white/10"}`}>
+                            <p className="font-semibold text-violet-300 mb-0.5">↩ {msg.reply_to_username}</p>
+                            <p className="text-white/60 truncate leading-relaxed">{msg.reply_to_content}</p>
                           </div>
                         )}
 
