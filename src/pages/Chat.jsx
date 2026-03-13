@@ -356,7 +356,9 @@ export default function Chat() {
               {/* Desktop friend header */}
               <div className="hidden md:flex px-4 py-3 border-b border-white/5 items-center gap-3 shrink-0">
                 <div className="relative">
-                  <span className="text-xl">{selectedFriend.avatar || "🎓"}</span>
+                  <span className="text-xl w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center bg-white/10">
+                    {selectedFriend.avatar?.startsWith("http") ? <img src={selectedFriend.avatar} alt="" className="w-full h-full object-cover" /> : (selectedFriend.avatar || "🎓")}
+                  </span>
                   <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#0a0a0f] ${onlineStatuses[selectedFriend.user_id] === "online" ? "bg-emerald-400" : "bg-white/20"}`} />
                 </div>
                 <div>
