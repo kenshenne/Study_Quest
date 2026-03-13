@@ -111,7 +111,7 @@ export default function Leaderboard() {
               { id: "all", label: "All" },
               { id: "maze", label: "Maze" },
               { id: "bomb", label: "Bomb" },
-              { id: "blast", label: "Blast" }
+              { id: "blast", label: "Tetriquiz" }
             ].map(g => (
               <button
                 key={g.id}
