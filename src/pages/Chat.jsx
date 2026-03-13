@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Send, MessageCircle, Smile, Check, CheckCheck } from "lucide-react";
+import { ArrowLeft, Send, MessageCircle, Smile, Check, CheckCheck, CornerUpLeft, MoreVertical, X, Pencil, Trash2 } from "lucide-react";
 import MobileNav from "@/components/layout/MobileNav";
 
-const EMOJI_LIST = ["😀","😂","😍","🥰","😎","😭","😅","🤔","😱","🥳","👍","❤️","🔥","💯","🎉","😤","🙏","💀","✨","😩","🫡","😋","🤩","😏","😴","🤣","😬","🥺","😡","🤯","behh","asa","😭😭","haha","lol","😮","😢","❤️","😡","👎"];
+const EMOJI_LIST = ["😀","😂","😍","🥰","😎","😭","😅","🤔","😱","🥳","👍","❤️","🔥","💯","🎉","😤","🙏","💀","✨","😩","🫡","😋","🤩","😏","😴","🤣","😬","🥺","😡","🤯"];
 const REACTIONS = ["👍","❤️","😂","😮","😢","😡"];
 
 export default function Chat() {
@@ -18,13 +18,17 @@ export default function Chat() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [reactionTarget, setReactionTarget] = useState(null); // msg id
+  const [reactionTarget, setReactionTarget] = useState(null);
   const [friendTyping, setFriendTyping] = useState(false);
   const [showFriendList, setShowFriendList] = useState(true);
-  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [unreadCounts, setUnreadCounts] = useState({}); // { friendUserId: count }
+  const [replyTo, setReplyTo] = useState(null); // { id, content, username }
+  const [editingMsg, setEditingMsg] = useState(null); // { id, content }
+  const [optionsMenu, setOptionsMenu] = useState(null); // msg id
   const bottomRef = useRef(null);
   const typingTimerRef = useRef(null);
   const emojiRef = useRef(null);
+  const optionsRef = useRef(null);
 
   useEffect(() => { init(); }, []);
 
@@ -47,11 +51,12 @@ export default function Chat() {
           });
         } else if (event.type === "update") {
           setMessages(prev => prev.map(m => m.id === msg.id ? msg : m));
+        } else if (event.type === "delete") {
+          setMessages(prev => prev.filter(m => m.id !== msg.id));
         }
       }
     });
 
-    // Subscribe to typing status
     const unsubTyping = base44.entities.TypingStatus.subscribe((event) => {
       const ts = event.data;
       if (ts?.user_id === selectedFriend.user_id && ts?.to_user_id === user.email) {
@@ -62,12 +67,36 @@ export default function Chat() {
     return () => { unsub(); unsubTyping(); };
   }, [selectedFriend, user]);
 
-  // Auto-scroll
+  // Subscribe globally for unread count tracking
+  useEffect(() => {
+    if (!user) return;
+    const unsub = base44.entities.ChatMessage.subscribe((event) => {
+      const msg = event.data;
+      if (!msg || msg.to_user_id !== user.email || msg.read) return;
+      if (event.type === "create") {
+        // Only increment if not in the active conversation
+        if (!selectedFriend || msg.from_user_id !== selectedFriend.user_id) {
+          setUnreadCounts(prev => ({
+            ...prev,
+            [msg.from_user_id]: (prev[msg.from_user_id] || 0) + 1
+          }));
+          // Browser notification
+          if (Notification.permission === "granted") {
+            new Notification(msg.from_username || msg.from_user_id, {
+              body: msg.content,
+              icon: "/favicon.ico"
+            });
+          }
+        }
+      }
+    });
+    return () => unsub();
+  }, [user, selectedFriend]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, friendTyping]);
 
-  // Mark messages as seen when conversation is open
   useEffect(() => {
     if (!selectedFriend || !user || messages.length === 0) return;
     const unread = messages.filter(m => m.from_user_id === selectedFriend.user_id && !m.read);
@@ -76,23 +105,24 @@ export default function Chat() {
       setMessages(prev => prev.map(m =>
         m.from_user_id === selectedFriend.user_id && !m.read ? { ...m, read: true, status: "seen" } : m
       ));
-      setUnreadMessages(0);
+      setUnreadCounts(prev => ({ ...prev, [selectedFriend.user_id]: 0 }));
     }
   }, [messages, selectedFriend, user]);
 
-  // Close emoji picker when clicking outside
   useEffect(() => {
     const handler = (e) => {
       if (emojiRef.current && !emojiRef.current.contains(e.target)) {
         setShowEmojiPicker(false);
         setReactionTarget(null);
       }
+      if (optionsRef.current && !optionsRef.current.contains(e.target)) {
+        setOptionsMenu(null);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Poll online statuses
   useEffect(() => {
     if (!friends.length) return;
     const fetchStatuses = async () => {
@@ -113,17 +143,27 @@ export default function Chat() {
     try {
       const u = await base44.auth.me();
       setUser(u);
+      // Request notification permission
+      if (Notification.permission === "default") {
+        Notification.requestPermission();
+      }
       const profiles = await base44.entities.UserProfile.filter({ user_id: u.email });
       if (profiles.length > 0) {
         const p = profiles[0];
         setProfile(p);
         if (p.friends?.length) {
           const all = await Promise.all(p.friends.map(fid => base44.entities.UserProfile.filter({ user_id: fid })));
-          setFriends(all.flat());
+          const friendList = all.flat();
+          setFriends(friendList);
+          // Load unread counts per friend
+          const allUnread = await base44.entities.ChatMessage.filter({ to_user_id: u.email, read: false });
+          const counts = {};
+          allUnread.forEach(m => {
+            counts[m.from_user_id] = (counts[m.from_user_id] || 0) + 1;
+          });
+          setUnreadCounts(counts);
         }
       }
-      const msgs = await base44.entities.ChatMessage.filter({ to_user_id: u.email, read: false });
-      setUnreadMessages(msgs.length);
     } catch {
       base44.auth.redirectToLogin(createPageUrl("Chat"));
     } finally {
@@ -138,8 +178,6 @@ export default function Chat() {
     ]);
     const all = [...sent, ...received].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
     setMessages(all);
-
-    // Mark as delivered immediately
     const undelivered = received.filter(m => m.status === "sent");
     if (undelivered.length > 0) {
       Promise.all(undelivered.map(m => base44.entities.ChatMessage.update(m.id, { delivered: true, status: "delivered" })));
@@ -149,17 +187,12 @@ export default function Chat() {
   const handleTyping = (e) => {
     setNewMsg(e.target.value);
     if (!user || !selectedFriend) return;
-
     clearTimeout(typingTimerRef.current);
     base44.entities.TypingStatus.filter({ user_id: user.email, to_user_id: selectedFriend.user_id }).then(existing => {
       const data = { user_id: user.email, username: profile?.username || user.email, to_user_id: selectedFriend.user_id, is_typing: true, last_typed: new Date().toISOString() };
-      if (existing.length > 0) {
-        base44.entities.TypingStatus.update(existing[0].id, data);
-      } else {
-        base44.entities.TypingStatus.create(data);
-      }
+      if (existing.length > 0) base44.entities.TypingStatus.update(existing[0].id, data);
+      else base44.entities.TypingStatus.create(data);
     });
-
     typingTimerRef.current = setTimeout(() => {
       base44.entities.TypingStatus.filter({ user_id: user.email, to_user_id: selectedFriend.user_id }).then(existing => {
         if (existing.length > 0) base44.entities.TypingStatus.update(existing[0].id, { is_typing: false });
@@ -171,7 +204,7 @@ export default function Chat() {
     if (!newMsg.trim() || !selectedFriend || sending) return;
     setSending(true);
     const friendOnline = onlineStatuses[selectedFriend.user_id] === "online";
-    await base44.entities.ChatMessage.create({
+    const msgData = {
       from_user_id: user.email,
       to_user_id: selectedFriend.user_id,
       from_username: profile?.username || user.email,
@@ -179,17 +212,36 @@ export default function Chat() {
       content: newMsg.trim(),
       status: friendOnline ? "delivered" : "sent",
       delivered: friendOnline,
-      read: false
-    });
-    // Don't optimistically add — the subscription will handle it
+      read: false,
+      unsent: false
+    };
+    if (replyTo) {
+      msgData.reply_to_id = replyTo.id;
+      msgData.reply_to_content = replyTo.content;
+      msgData.reply_to_username = replyTo.username;
+    }
+    await base44.entities.ChatMessage.create(msgData);
     setNewMsg("");
     setSending(false);
     setShowEmojiPicker(false);
-    // Stop typing indicator
+    setReplyTo(null);
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     base44.entities.TypingStatus.filter({ user_id: user.email, to_user_id: selectedFriend.user_id }).then(existing => {
       if (existing.length > 0) base44.entities.TypingStatus.update(existing[0].id, { is_typing: false });
     });
+  };
+
+  const saveEdit = async () => {
+    if (!editingMsg || !editingMsg.content.trim()) return;
+    await base44.entities.ChatMessage.update(editingMsg.id, { content: editingMsg.content });
+    setMessages(prev => prev.map(m => m.id === editingMsg.id ? { ...m, content: editingMsg.content } : m));
+    setEditingMsg(null);
+  };
+
+  const unsendMessage = async (msgId) => {
+    await base44.entities.ChatMessage.update(msgId, { unsent: true, content: "This message was unsent" });
+    setMessages(prev => prev.map(m => m.id === msgId ? { ...m, unsent: true, content: "This message was unsent" } : m));
+    setOptionsMenu(null);
   };
 
   const addReaction = async (msgId, emoji) => {
@@ -215,15 +267,15 @@ export default function Chat() {
     return <Check className="w-3 h-3 text-white/40" />;
   };
 
+  const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
   const friendStatus = selectedFriend ? (onlineStatuses[selectedFriend.user_id] === "online" ? "🟢 Online" : "⚫ Offline") : "";
 
   if (loading) return <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center text-white animate-pulse">Loading...</div>;
 
   return (
     <div className="h-screen bg-[#0a0a0f] text-white flex flex-col overflow-hidden">
-      {/* Header */}
       <header className="border-b border-white/5 px-4 py-3 flex items-center gap-3 shrink-0 bg-[#0a0a0f] z-10">
-        <MobileNav unreadMessages={unreadMessages} profile={profile} />
+        <MobileNav unreadMessages={totalUnread} profile={profile} />
         {selectedFriend && !showFriendList ? (
           <button onClick={() => { setShowFriendList(true); setSelectedFriend(null); }} className="text-white/40 hover:text-white transition-colors md:hidden">
             <ArrowLeft className="w-5 h-5" />
@@ -245,7 +297,7 @@ export default function Chat() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Friends list — hidden on mobile when chat is open */}
+        {/* Friends list */}
         <div className={`${showFriendList ? "flex" : "hidden"} md:flex w-full md:w-64 border-r border-white/5 flex-col shrink-0`}>
           <div className="p-3 border-b border-white/5">
             <p className="text-xs text-white/40 font-semibold uppercase tracking-wide">Friends ({friends.length})</p>
@@ -259,6 +311,7 @@ export default function Chat() {
             ) : (
               friends.map(f => {
                 const isOnline = onlineStatuses[f.user_id] === "online";
+                const unread = unreadCounts[f.user_id] || 0;
                 return (
                   <button
                     key={f.id}
@@ -273,6 +326,11 @@ export default function Chat() {
                       <p className="text-sm font-medium truncate">{f.username}</p>
                       <p className="text-xs text-white/30">{isOnline ? "Online" : "Offline"}</p>
                     </div>
+                    {unread > 0 && (
+                      <span className="bg-violet-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">
+                        {unread > 9 ? "9+" : unread}
+                      </span>
+                    )}
                   </button>
                 );
               })
@@ -311,28 +369,96 @@ export default function Chat() {
                     acc[r.emoji] = (acc[r.emoji] || 0) + 1;
                     return acc;
                   }, {});
+                  const isUnsent = msg.unsent;
+
                   return (
                     <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"} group relative`}>
-                      <div className="max-w-[75%] flex flex-col">
-                        <div
-                          className={`relative px-3.5 py-2 rounded-2xl text-sm ${isMe ? "bg-violet-600 text-white rounded-br-sm" : "bg-white/10 text-white rounded-bl-sm"}`}
-                          onLongPress={() => setReactionTarget(msg.id)}
-                        >
-                          <p className="break-words leading-relaxed">{msg.content}</p>
-                          <div className={`flex items-center gap-1 mt-0.5 ${isMe ? "justify-end" : "justify-start"}`}>
-                            <p className="text-[10px] opacity-50">
-                              {new Date(msg.created_date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                            </p>
-                            {getStatusIcon(msg)}
+                      <div className={`max-w-[75%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                        {/* Reply preview inside bubble */}
+                        {msg.reply_to_content && (
+                          <div className={`text-xs rounded-t-xl px-3 pt-2 pb-1 w-full ${isMe ? "bg-violet-700/60" : "bg-white/15"} border-l-2 border-violet-400`}>
+                            <p className="font-semibold text-violet-300">{msg.reply_to_username}</p>
+                            <p className="text-white/60 truncate">{msg.reply_to_content}</p>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-1.5">
+                          {/* Reply icon (left of message for "me", right for others) */}
+                          {!isMe && !isUnsent && (
+                            <button
+                              onClick={() => setReplyTo({ id: msg.id, content: msg.content, username: msg.from_username })}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity text-white/40 hover:text-white p-1"
+                              title="Reply"
+                            >
+                              <CornerUpLeft className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+
+                          <div
+                            className={`relative px-3.5 py-2 text-sm ${
+                              msg.reply_to_content ? "rounded-b-2xl rounded-tr-2xl" : "rounded-2xl"
+                            } ${isMe
+                              ? isUnsent ? "bg-white/10 text-white/40 italic rounded-br-sm" : "bg-violet-600 text-white rounded-br-sm"
+                              : isUnsent ? "bg-white/5 text-white/30 italic rounded-bl-sm" : "bg-white/10 text-white rounded-bl-sm"
+                            }`}
+                          >
+                            <p className="break-words leading-relaxed">{msg.content}</p>
+                            <div className={`flex items-center gap-1 mt-0.5 ${isMe ? "justify-end" : "justify-start"}`}>
+                              <p className="text-[10px] opacity-50">
+                                {new Date(msg.created_date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                              </p>
+                              {getStatusIcon(msg)}
+                            </div>
+
+                            {/* Reaction button */}
+                            {!isUnsent && (
+                              <button
+                                onClick={() => setReactionTarget(reactionTarget === msg.id ? null : msg.id)}
+                                className="absolute -top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-[#1a1a2e] border border-white/10 rounded-full p-0.5"
+                              >
+                                <Smile className="w-3.5 h-3.5 text-white/50" />
+                              </button>
+                            )}
                           </div>
 
-                          {/* Reaction button - show on hover */}
-                          <button
-                            onClick={() => setReactionTarget(reactionTarget === msg.id ? null : msg.id)}
-                            className="absolute -top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-[#1a1a2e] border border-white/10 rounded-full p-0.5"
-                          >
-                            <Smile className="w-3.5 h-3.5 text-white/50" />
-                          </button>
+                          {/* Reply icon for my messages */}
+                          {isMe && !isUnsent && (
+                            <button
+                              onClick={() => setReplyTo({ id: msg.id, content: msg.content, username: profile?.username || user.email })}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity text-white/40 hover:text-white p-1"
+                              title="Reply"
+                            >
+                              <CornerUpLeft className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+
+                          {/* 3-dot options button (only for my messages) */}
+                          {isMe && !isUnsent && (
+                            <div className="relative" ref={optionsMenu === msg.id ? optionsRef : null}>
+                              <button
+                                onClick={() => setOptionsMenu(optionsMenu === msg.id ? null : msg.id)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity text-white/40 hover:text-white p-1"
+                              >
+                                <MoreVertical className="w-3.5 h-3.5" />
+                              </button>
+                              {optionsMenu === msg.id && (
+                                <div className="absolute right-0 bottom-full mb-1 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-2xl z-30 overflow-hidden min-w-[130px]">
+                                  <button
+                                    onClick={() => { setEditingMsg({ id: msg.id, content: msg.content }); setOptionsMenu(null); }}
+                                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-white/80 hover:bg-white/10 w-full text-left transition-colors"
+                                  >
+                                    <Pencil className="w-3.5 h-3.5" /> Edit
+                                  </button>
+                                  <button
+                                    onClick={() => unsendMessage(msg.id)}
+                                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-rose-400 hover:bg-white/10 w-full text-left transition-colors"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" /> Unsend
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
 
                         {/* Reactions display */}
@@ -350,7 +476,7 @@ export default function Chat() {
                           </div>
                         )}
 
-                        {/* Reaction picker for this message */}
+                        {/* Reaction picker */}
                         {reactionTarget === msg.id && (
                           <div ref={emojiRef} className={`absolute z-20 flex gap-1 bg-[#1a1a2e] border border-white/10 rounded-full px-2 py-1.5 shadow-xl ${isMe ? "right-0" : "left-0"} -top-10`}>
                             {REACTIONS.map(e => (
@@ -378,6 +504,40 @@ export default function Chat() {
 
               {/* Input area */}
               <div className="p-3 border-t border-white/5 shrink-0 bg-[#0a0a0f]">
+                {/* Reply preview bar */}
+                {replyTo && (
+                  <div className="flex items-center justify-between bg-violet-900/30 border border-violet-500/20 rounded-xl px-3 py-2 mb-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <CornerUpLeft className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-violet-300 font-semibold">{replyTo.username}</p>
+                        <p className="text-xs text-white/50 truncate">{replyTo.content}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setReplyTo(null)} className="text-white/40 hover:text-white shrink-0 ml-2">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Edit bar */}
+                {editingMsg && (
+                  <div className="flex items-center gap-2 bg-amber-900/20 border border-amber-500/20 rounded-xl px-3 py-2 mb-2">
+                    <Pencil className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <input
+                      value={editingMsg.content}
+                      onChange={e => setEditingMsg(prev => ({ ...prev, content: e.target.value }))}
+                      onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditingMsg(null); }}
+                      className="flex-1 bg-transparent text-sm text-white focus:outline-none"
+                      autoFocus
+                    />
+                    <button onClick={saveEdit} className="text-emerald-400 hover:text-emerald-300 text-xs font-semibold shrink-0">Save</button>
+                    <button onClick={() => setEditingMsg(null)} className="text-white/40 hover:text-white shrink-0">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
                 {/* Emoji picker */}
                 {showEmojiPicker && (
                   <div ref={emojiRef} className="mb-2 bg-[#1a1a2e] border border-white/10 rounded-2xl p-3 max-h-40 overflow-y-auto">
@@ -405,7 +565,7 @@ export default function Chat() {
                     value={newMsg}
                     onChange={handleTyping}
                     onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
-                    placeholder="Message..."
+                    placeholder={replyTo ? `Reply to ${replyTo.username}...` : "Message..."}
                     style={{ background: "#1a1a2e", color: "white" }}
                     className="flex-1 border border-white/10 rounded-2xl px-4 py-2.5 text-sm placeholder-white/30 focus:outline-none focus:border-violet-500 transition-colors"
                   />

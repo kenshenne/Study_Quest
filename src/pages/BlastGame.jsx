@@ -336,7 +336,7 @@ export default function BlastGame() {
       <div className="min-h-screen bg-[#0a0a0f] text-white">
         <header className="border-b border-white/5 px-4 py-3 flex items-center gap-3">
           <MobileNav profile={null} />
-          <h1 className="text-lg font-bold">Block Blast</h1>
+          <h1 className="text-lg font-bold">Tetriquiz</h1>
         </header>
         <main className="max-w-md mx-auto px-6 py-10">
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
