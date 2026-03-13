@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
-import { ArrowLeft, UserPlus, Search, Check, X, LogOut, ChevronDown, ChevronUp, Star, MessageCircle } from "lucide-react";
+import { UserPlus, Search, Check, X, LogOut, ChevronDown, ChevronUp, Star, MessageCircle, Camera, Upload } from "lucide-react";
 import MobileNav from "@/components/layout/MobileNav";
 
 const AVATARS = ["🎓", "🦁", "🐯", "🦊", "🐼", "🐸", "🦄", "🐉", "🤖", "👾", "🎮", "⚡", "🔥", "💎", "🌟"];
@@ -22,6 +22,8 @@ export default function Profile() {
   const [friendProfiles, setFriendProfiles] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     init();
