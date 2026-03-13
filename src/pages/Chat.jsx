@@ -383,16 +383,16 @@ export default function Chat() {
                         )}
 
                         <div className="flex items-center gap-1.5">
-                          {/* Reply icon (left of message for "me", right for others) */}
-                          {!isMe && !isUnsent && (
-                            <button
-                              onClick={() => setReplyTo({ id: msg.id, content: msg.content, username: msg.from_username })}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity text-white/40 hover:text-white p-1"
-                              title="Reply"
-                            >
-                              <CornerUpLeft className="w-3.5 h-3.5" />
-                            </button>
-                          )}
+                        {/* Reply icon (left of message for "me", right for others) */}
+                        {!isMe && !isUnsent && (
+                          <button
+                            onClick={() => setReplyTo({ id: msg.id, content: msg.content, username: msg.from_username })}
+                            className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-white/40 hover:text-white p-2 touch-manipulation"
+                            title="Reply"
+                          >
+                            <CornerUpLeft className="w-4 h-4" />
+                          </button>
+                        )}
 
                           <div
                             className={`relative px-3.5 py-2 text-sm ${
@@ -425,10 +425,10 @@ export default function Chat() {
                           {isMe && !isUnsent && (
                             <button
                               onClick={() => setReplyTo({ id: msg.id, content: msg.content, username: profile?.username || user.email })}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity text-white/40 hover:text-white p-1"
+                              className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-white/40 hover:text-white p-2 touch-manipulation"
                               title="Reply"
                             >
-                              <CornerUpLeft className="w-3.5 h-3.5" />
+                              <CornerUpLeft className="w-4 h-4" />
                             </button>
                           )}
 
@@ -437,7 +437,7 @@ export default function Chat() {
                             <div className="relative" ref={optionsMenu === msg.id ? optionsRef : null}>
                               <button
                                 onClick={() => setOptionsMenu(optionsMenu === msg.id ? null : msg.id)}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity text-white/40 hover:text-white p-1"
+                                className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-white/40 hover:text-white p-2 touch-manipulation"
                               >
                                 <MoreVertical className="w-3.5 h-3.5" />
                               </button>
