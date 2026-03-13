@@ -79,6 +79,17 @@ export default function Profile() {
     setSaving(false);
   };
 
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const updated = await base44.entities.UserProfile.update(profile.id, { avatar: file_url });
+    setProfile(updated);
+    setSelectedAvatar(file_url);
+    setUploadingPhoto(false);
+  };
+
   const searchFriends = async () => {
     if (!searchQuery.trim()) return;
     const q = searchQuery.trim();
