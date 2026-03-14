@@ -102,7 +102,7 @@ export default function BlastGame() {
     }).catch(() => base44.auth.redirectToLogin(createPageUrl("BlastGame")));
   }, []);
 
-  const startGame = async (matId) => {
+  const startGame = async (matId, diff = difficulty) => {
     const allQs = await base44.entities.Question.filter({ material_id: matId, user_id: user.email });
     if (!allQs.length) { alert("No questions found. Please upload study materials first."); return; }
     const diffQs = allQs.filter(q => q.difficulty === difficulty);
