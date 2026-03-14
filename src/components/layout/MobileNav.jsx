@@ -76,8 +76,10 @@ export default function MobileNav({ unreadMessages = 0, profile }) {
             {profile && (
               <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "#0a0a12", flexShrink: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
-                    {profile.avatar || "🎓"}
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, overflow: "hidden" }}>
+                    {profile.avatar?.startsWith("http")
+                      ? <img src={profile.avatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      : (profile.avatar || "🎓")}
                   </div>
                   <div>
                     <p style={{ fontWeight: 600, fontSize: 14, color: "white", margin: 0 }}>{profile.username}</p>

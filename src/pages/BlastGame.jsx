@@ -359,7 +359,7 @@ export default function BlastGame() {
           <div className="mt-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 text-xs text-white/50 space-y-1">
             <p>⬅️➡️ Arrow keys to move · ⬆️ Rotate · ⬇️ Drop · Space = Hard drop</p>
             <p>Clearing a line triggers a quiz question!</p>
-            {difficulty === "hard" && <p className="text-rose-400">Hard mode: Wrong answer = Game Over!</p>}
+
           </div>
         </main>
       </div>
