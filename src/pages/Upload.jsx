@@ -285,33 +285,49 @@ STUDY MATERIAL:
 ${content.slice(0, 14000)}
 ═══════════════════════════════════
 
-TASK: Generate exactly ${count} questions with a MIX of all three difficulty levels.
+TASK: Generate exactly ${count} questions split across three difficulty levels.
 
-DIFFICULTY DISTRIBUTION AND QUESTION TYPES:
-- easy (~35%, ~${Math.round(count * 0.35)} questions): Multiple choice ONLY (4 options). Test basic recall. Include a helpful hint. Set difficulty="easy".
-- medium (~40%, ~${Math.round(count * 0.40)} questions): Mix of multiple choice and enumeration. Test understanding. Include a structural hint. Set difficulty="medium".
-- hard (~25%, ~${Math.round(count * 0.25)} questions): Mix of multiple_choice, enumeration, fill_blank, AND identification. Test deep analysis. NO hints (set hint to ""). Set difficulty="hard".
+DIFFICULTY DISTRIBUTION AND QUESTION TYPES — STRICTLY FOLLOW THESE RULES:
 
-QUESTION TYPE RULES:
-- multiple_choice: exactly 4 options (1 correct + 3 plausible distractors). Shuffle correct answer position randomly.
-- enumeration: empty "options" array []. correct_answer = comma-separated key terms in order.
-- fill_blank: empty "options" array []. question_text must contain ___ for the blank. correct_answer = exact missing word/phrase.
-- identification: empty "options" array []. A direct question expecting a specific name, term, formula, value, or person as the answer. Example: "Who is known as the father of modern physics?" → "Albert Einstein". Use this for HARD questions only.
+EASY (~35%, ~${Math.round(count * 0.35)} questions):
+- question_type MUST be "multiple_choice" ONLY. No other types allowed.
+- Exactly 4 answer options (1 correct + 3 plausible distractors).
+- Test basic recall of facts and definitions.
+- Include a short helpful hint.
+- Set difficulty="easy".
+
+MEDIUM (~40%, ~${Math.round(count * 0.40)} questions):
+- question_type MUST be "identification" ONLY. No other types allowed.
+- A direct question expecting a specific name, term, value, or person.
+- Example: "What planet is known as the Red Planet?" → Answer: "Mars"
+- options array must be empty [].
+- Include a structural hint.
+- Set difficulty="medium".
+
+HARD (~25%, ~${Math.round(count * 0.25)} questions):
+- Mix of ALL four types: multiple_choice, identification, enumeration, fill_blank.
+- Spread evenly: roughly equal amounts of each type.
+- Test deep understanding and analysis.
+- NO hints (set hint to "").
+- Set difficulty="hard".
+
+QUESTION TYPE FORMAT RULES:
+- multiple_choice: exactly 4 options array. correct_answer = the correct option text.
+- identification: empty options []. Direct question with a specific answer (name, term, formula, person, value).
+- enumeration: empty options []. correct_answer = comma-separated key terms. Example: "Solid, Liquid, Gas"
+- fill_blank: empty options []. question_text must contain ___ for the blank. correct_answer = exact missing word/phrase.
 
 MATH & SCIENCE SUPPORT:
 - If material contains equations or formulas, generate questions that ask students to solve, identify, or complete them.
-- Example: material has "2x + 5 = 15" → generate "Solve for x: 2x + 5 = 15" with answer "x = 5"
-- Use fill_blank or identification types for math problems.
+- Use fill_blank or identification for math problems (e.g. "Solve: 2x + 5 = 15" → "x = 5").
 
 GLOBAL RULES:
 1. Every question must be directly answerable from the material above. NO external knowledge.
-2. Cover a WIDE variety of topics — spread questions across the entire material.
+2. Cover a WIDE variety of topics — spread across the entire material.
 3. Each question must be unique — never repeat the same concept.
 4. Explanations: 1-2 sentences explaining WHY the answer is correct.
 5. "topic" = short 2-4 word label (e.g. "Cell Division", "Algebra Equations").
-6. "difficulty" field must be "easy", "medium", or "hard" for each question.
-7. Never generate trick questions or ambiguous answers.
-8. For hard questions, ALWAYS include at least ${Math.round(count * 0.08)} identification questions.
+6. Never generate trick questions or ambiguous answers.
 
 Generate exactly ${count} questions now.`;
 
