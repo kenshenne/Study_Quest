@@ -354,7 +354,7 @@ export default function BlastGame() {
         <main className="max-w-md mx-auto px-6 py-10">
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
             <h2 className="font-semibold mb-4">Game Setup</h2>
-            {user && <MaterialSelector userId={user.email} onSelect={(id) => { setMaterialId(id); startGame(id); }} difficulty={difficulty} onDifficultyChange={setDifficulty} />}
+            {user && <MaterialSelector userId={user.email} onSelect={(id) => { setMaterialId(id); startGame(id, difficulty); }} difficulty={difficulty} onDifficultyChange={setDifficulty} />}
           </div>
           <div className="mt-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 text-xs text-white/50 space-y-1">
             <p>⬅️➡️ Arrow keys to move · ⬆️ Rotate · ⬇️ Drop · Space = Hard drop</p>
