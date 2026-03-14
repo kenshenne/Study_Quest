@@ -310,7 +310,12 @@ export default function MazeGame() {
     const cpIdx = checkpoints.findIndex(cp => cp.r === nr && cp.c === nc);
     if (cpIdx !== -1 && !visitedCheckpoints.has(cpKey)) {
       const q = questions[qIndex];
-      if (q) setActiveQuestion(q);
+      if (q) {
+        setActiveQuestion(q);
+      } else {
+        // All questions exhausted — game over
+        endGame();
+      }
     }
 
     if (nr === ROWS - 1 && nc === COLS - 1) {

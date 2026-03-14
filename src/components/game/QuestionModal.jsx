@@ -80,7 +80,8 @@ Is the student's answer correct?`,
   const typeLabel = {
     multiple_choice: "Multiple Choice",
     enumeration: "Enumeration",
-    fill_blank: "Fill in the Blank"
+    fill_blank: "Fill in the Blank",
+    identification: "Identification"
   }[question.question_type] || "";
 
   return (
