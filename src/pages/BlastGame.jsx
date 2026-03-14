@@ -118,7 +118,7 @@ export default function BlastGame() {
     nextPieceRef.current = n;
     setScore(0);
     setLines(0);
-    setLives(3);
+    setLives(LIVES_BY_DIFFICULTY[diff] ?? 3);
     setGameStats({ correct: 0, incorrect: 0, total: 0, xp: 0, mistakes: [] });
     setLocked(false);
     try {
