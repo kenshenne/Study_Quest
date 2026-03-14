@@ -110,8 +110,10 @@ export default function Dashboard() {
         {/* Welcome + XP */}
         <div className="mb-10">
           <div className="flex items-center gap-3 md:gap-4 mb-4">
-            <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-600/20 border border-violet-500/30 flex items-center justify-center text-2xl md:text-3xl shrink-0">
-              {profile?.avatar || "🎓"}
+            <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-600/20 border border-violet-500/30 flex items-center justify-center text-2xl md:text-3xl shrink-0 overflow-hidden">
+              {profile?.avatar?.startsWith("http")
+                ? <img src={profile.avatar} alt="" className="w-full h-full object-cover" />
+                : (profile?.avatar || "🎓")}
             </div>
             <div>
               <h1 className="text-xl md:text-3xl font-bold">{isNewUser ? "Welcome" : "Welcome back"}, {profile?.username || "Scholar"}!</h1>

@@ -150,7 +150,11 @@ export default function Leaderboard() {
               const textSize = i === 1 ? "text-lg" : "text-base";
               return (
                 <div key={p.id} className={`flex flex-col items-center ${i === 1 ? "scale-110" : ""}`}>
-                  <div className="text-2xl mb-1">{p.avatar || "🎓"}</div>
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-white/10 mb-1 mx-auto">
+                    {p.avatar?.startsWith("http")
+                      ? <img src={p.avatar} alt="" className="w-full h-full object-cover" />
+                      : <span className="text-2xl">{p.avatar || "🎓"}</span>}
+                  </div>
                   <div className="text-xs font-medium mb-1 max-w-[80px] truncate">{p.username}</div>
                   <div className={`${heights[i]} w-20 ${rankBgs[actualRank - 1]} border rounded-t-xl flex flex-col items-center justify-center`}>
                     <Crown className={`w-4 h-4 mb-1 ${rankColors[actualRank - 1]}`} />
@@ -173,7 +177,11 @@ export default function Leaderboard() {
               <span className={`w-8 text-center font-bold text-sm ${i < 3 ? rankColors[i] : "text-white/40"}`}>
                 #{i + 1}
               </span>
-              <span className="text-xl">{p.avatar || "🎓"}</span>
+              <span className="text-xl w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white/10 shrink-0">
+                {p.avatar?.startsWith("http")
+                  ? <img src={p.avatar} alt="" className="w-full h-full object-cover" />
+                  : (p.avatar || "🎓")}
+              </span>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm truncate">{p.username}</p>
                 <p className="text-xs text-white/40">Lv.{p.level} · {p.total_questions_answered || 0} questions</p>
