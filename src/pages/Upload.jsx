@@ -10,19 +10,22 @@ import MobileNav from "@/components/layout/MobileNav";
 
 const STEPS = ["Upload", "Configure", "Generate"];
 
-const QUESTION_COUNT = 45; // generate 35-50 questions (mixed difficulty)
+const QUESTION_COUNT = 45;
 const MAX_PDF_MB = 10;
 const MAX_PPT_MB = 20;
 const MAX_IMAGE_MB = 5;
-const MAX_TEXT_WORDS = 2500;
-const MAX_EXTRACTED_WORDS = 2500; // max words allowed from PDF/PPT extraction
+const MAX_TEXT_WORDS = 5000;
+const MAX_EXTRACTED_WORDS = 5000;
 
 function isTextMeaningful(text) {
-  if (!text || text.trim().length < 50) return false;
+  if (!text || text.trim().length < 30) return false;
   const words = text.trim().split(/\s+/).filter(w => w.length > 0);
-  if (words.length < 15) return false;
-  const realWords = words.filter(w => w.length >= 3 && /[aeiouAEIOU]/.test(w) && /[a-zA-Z]/.test(w));
-  return realWords.length / words.length > 0.4;
+  if (words.length < 10) return false;
+  // Accept math/science content that may have numbers, symbols, and short words
+  const hasMath = /[\d=+\-*/^()]+/.test(text);
+  if (hasMath) return true;
+  const realWords = words.filter(w => w.length >= 2 && /[a-zA-Z]/.test(w));
+  return realWords.length / words.length > 0.25;
 }
 
 function getFileType(file) {
@@ -169,14 +172,33 @@ export default function Upload() {
               file_url,
               json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
             });
-          } catch {
-            setError("Failed to extract text from the uploaded document. Please try a different file.");
-            setStep(1); return;
+          } catch (extractErr) {
+            // If extraction API fails, try LLM-based extraction as fallback
+            try {
+              const llmResult = await base44.integrations.Core.InvokeLLM({
+                prompt: `Extract all readable text content from this document. Return all text you can read, including titles, headings, paragraphs, bullet points, formulas, and any other content. Do not summarize — return the raw text as-is.`,
+                file_urls: [file_url],
+                response_json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
+              });
+              if (llmResult?.text && llmResult.text.trim().length >= 30) {
+                content = llmResult.text;
+                setExtractedContent(content);
+                setProgressPct(45);
+                // Skip to after extraction block
+                result = { status: "success", output: { text: llmResult.text } };
+              } else {
+                setError("Failed to extract text from the uploaded document. Please try pasting your text directly.");
+                setStep(1); return;
+              }
+            } catch {
+              setError("Failed to extract text from the uploaded document. Please try pasting your text directly.");
+              setStep(1); return;
+            }
           }
 
           if (result.status === "success" && result.output?.text) {
             const extracted = result.output.text;
-            if (!extracted || extracted.trim().length < 50) {
+            if (!extracted || extracted.trim().length < 30) {
               setError("No readable text detected in this file. Please upload a document with readable content.");
               setStep(1); return;
             }
@@ -186,12 +208,12 @@ export default function Upload() {
             }
             const extractedWords = extracted.trim().split(/\s+/).filter(w => w.length > 0).length;
             if (extractedWords > MAX_EXTRACTED_WORDS) {
-              setError(`The uploaded file exceeds the ${MAX_EXTRACTED_WORDS.toLocaleString()}-word limit (found ${extractedWords.toLocaleString()} words). Please upload a smaller document.`);
-              setStep(1); return;
+              content = extracted.trim().split(/\s+/).slice(0, MAX_EXTRACTED_WORDS).join(" ");
+            } else {
+              content = extracted;
             }
-            content = extracted;
             setExtractedContent(content);
-          } else {
+          } else if (!content) {
             setError("Failed to extract text from the uploaded document. Please ensure it contains readable text.");
             setStep(1); return;
           }
@@ -251,34 +273,45 @@ export default function Upload() {
 
       const prompt = `You are an expert educational question generator for a gamified learning app. Create high-quality study questions STRICTLY based on the provided material.
 
-This material may have been extracted from a PDF, PowerPoint presentation, or images. Extract all meaningful content including slide titles, bullet points, diagrams descriptions, and notes.
+This material may have been extracted from a PDF, PowerPoint, images, or math/science documents. Support ALL content types including:
+- Lectures, notes, textbooks
+- Mathematical formulas and equations (e.g. "Solve for x: 2x + 5 = 15" → answer: x = 5)
+- Science concepts with symbols, variables, and numbers
+- Slide titles, bullet points, diagrams, and notes
 
 ═══════════════════════════════════
 STUDY MATERIAL:
 ═══════════════════════════════════
-${content.slice(0, 12000)}
+${content.slice(0, 14000)}
 ═══════════════════════════════════
 
 TASK: Generate exactly ${count} questions with a MIX of all three difficulty levels.
 
-DIFFICULTY DISTRIBUTION:
-- easy (~35%): Multiple choice ONLY (4 options). Test basic recall. Include a helpful hint.
-- medium (~40%): Mix of multiple choice and enumeration. Test understanding. Include a structural hint.
-- hard (~25%): Mix of multiple choice, enumeration, AND fill-in-the-blank. Test deep analysis. NO hints (set hint to "").
+DIFFICULTY DISTRIBUTION AND QUESTION TYPES:
+- easy (~35%, ~${Math.round(count * 0.35)} questions): Multiple choice ONLY (4 options). Test basic recall. Include a helpful hint. Set difficulty="easy".
+- medium (~40%, ~${Math.round(count * 0.40)} questions): Mix of multiple choice and enumeration. Test understanding. Include a structural hint. Set difficulty="medium".
+- hard (~25%, ~${Math.round(count * 0.25)} questions): Mix of multiple_choice, enumeration, fill_blank, AND identification. Test deep analysis. NO hints (set hint to ""). Set difficulty="hard".
 
 QUESTION TYPE RULES:
 - multiple_choice: exactly 4 options (1 correct + 3 plausible distractors). Shuffle correct answer position randomly.
 - enumeration: empty "options" array []. correct_answer = comma-separated key terms in order.
 - fill_blank: empty "options" array []. question_text must contain ___ for the blank. correct_answer = exact missing word/phrase.
+- identification: empty "options" array []. A direct question expecting a specific name, term, formula, value, or person as the answer. Example: "Who is known as the father of modern physics?" → "Albert Einstein". Use this for HARD questions only.
+
+MATH & SCIENCE SUPPORT:
+- If material contains equations or formulas, generate questions that ask students to solve, identify, or complete them.
+- Example: material has "2x + 5 = 15" → generate "Solve for x: 2x + 5 = 15" with answer "x = 5"
+- Use fill_blank or identification types for math problems.
 
 GLOBAL RULES:
 1. Every question must be directly answerable from the material above. NO external knowledge.
 2. Cover a WIDE variety of topics — spread questions across the entire material.
 3. Each question must be unique — never repeat the same concept.
 4. Explanations: 1-2 sentences explaining WHY the answer is correct.
-5. "topic" = short 2-4 word label (e.g. "Cell Division", "Chapter 3 Concepts").
+5. "topic" = short 2-4 word label (e.g. "Cell Division", "Algebra Equations").
 6. "difficulty" field must be "easy", "medium", or "hard" for each question.
 7. Never generate trick questions or ambiguous answers.
+8. For hard questions, ALWAYS include at least ${Math.round(count * 0.08)} identification questions.
 
 Generate exactly ${count} questions now.`;
 
