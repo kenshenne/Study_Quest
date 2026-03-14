@@ -79,7 +79,8 @@ export default function BlastGame() {
   const [nextPiece, setNextPiece] = useState(null);
   const [score, setScore] = useState(0);
   const [lines, setLines] = useState(0);
-  const [lives, setLives] = useState(3);
+  const LIVES_BY_DIFFICULTY = { easy: 5, medium: 4, hard: 3 };
+  const [lives, setLives] = useState(5);
   const [gameStats, setGameStats] = useState({ correct: 0, incorrect: 0, total: 0, xp: 0, mistakes: [] });
   const [activeQuestion, setActiveQuestion] = useState(null);
   const [pendingBoard, setPendingBoard] = useState(null);

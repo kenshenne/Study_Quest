@@ -328,7 +328,7 @@ Generate exactly ${count} questions now.`;
                 required: ["question_text", "question_type", "correct_answer", "explanation", "topic"],
                 properties: {
                   question_text: { type: "string" },
-                  question_type: { type: "string", enum: ["multiple_choice", "enumeration", "fill_blank"] },
+                  question_type: { type: "string", enum: ["multiple_choice", "enumeration", "fill_blank", "identification"] },
                   options: { type: "array", items: { type: "string" } },
                   correct_answer: { type: "string" },
                   explanation: { type: "string" },
