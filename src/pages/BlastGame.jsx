@@ -275,6 +275,18 @@ export default function BlastGame() {
     setActiveQuestion(null);
     activeQRef.current = null;
 
+    // Decrement lives on wrong answer
+    let newLives = lives;
+    if (!correct) {
+      newLives = lives - 1;
+      setLives(newLives);
+      if (newLives <= 0) {
+        setPendingBoard(null);
+        endGame(newStats);
+        return;
+      }
+    }
+
     const newBoard = pendingBoard || boardStateRef.current;
     setPendingBoard(null);
 
