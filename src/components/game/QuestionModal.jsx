@@ -123,7 +123,7 @@ Is the student's answer correct?`,
           {/* Answer Input */}
           {!submitted && (
             <>
-              {question.question_type === "multiple_choice" && shuffledOptions?.length > 0 ? (
+              {question.question_type === "multiple_choice" && shuffledOptions?.length > 0 && question.options?.length > 0 ? (
                 <div className="space-y-2">
                   {shuffledOptions.map((opt, i) => (
                     <button
@@ -139,7 +139,7 @@ Is the student's answer correct?`,
                 <textarea
                   value={textAnswer}
                   onChange={e => setTextAnswer(e.target.value)}
-                  placeholder={question.question_type === "enumeration" ? "List each item (comma or newline separated)..." : "Type your answer..."}
+                  placeholder={question.question_type === "enumeration" ? "List each item (comma or newline separated)..." : question.question_type === "identification" ? "Enter the name, term, or value..." : "Type your answer..."}
                   rows={3}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-violet-500 resize-none text-sm"
                 />
