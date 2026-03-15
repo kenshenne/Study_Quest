@@ -206,17 +206,11 @@ export default function BombGame() {
     setRevealedCount(prev => prev + 1);
   };
 
-  const checkLevelComplete = (currentGrid, currentUsed) => {
+  const checkLevelComplete = (currentGrid) => {
     const g = currentGrid || grid;
-    const safeCells = g.filter(c => !c.isBomb).length;
-    const revealed = g.filter(c => c.revealed && !c.isBomb).length;
-    const flaggedBombs = g.filter(c => c.isBomb && c.flagged).length;
-    const totalBombs = g.filter(c => c.isBomb).length;
-    const allSafeRevealed = revealed >= safeCells;
-    const allBombsFlagged = flaggedBombs >= totalBombs;
-
-    if (allSafeRevealed || allBombsFlagged) {
-      setTimeout(() => endGame(), 500);
+    const allRevealed = g.every(c => c.revealed || c.flagged);
+    if (allRevealed) {
+      setTimeout(() => endGame(undefined, true), 500);
     }
   };
 
