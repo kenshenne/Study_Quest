@@ -254,7 +254,8 @@ export default function BombGame() {
     setTimeout(() => checkLevelComplete(), 300);
   };
 
-  const endGame = async (finalStats = gameStats) => {
+  const endGame = async (finalStats = gameStats, won = false) => {
+    setGameWon(won);
     try {
       const sessionData = {
         score: finalStats.correct * (difficulty === "easy" ? 10 : difficulty === "medium" ? 20 : 30),
