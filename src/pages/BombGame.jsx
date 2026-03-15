@@ -70,6 +70,7 @@ export default function BombGame() {
   const [flagCount, setFlagCount] = useState(0);
   const [newAchievements, setNewAchievements] = useState([]);
   const [sessionId, setSessionId] = useState(null);
+  const [gameWon, setGameWon] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(u => {
