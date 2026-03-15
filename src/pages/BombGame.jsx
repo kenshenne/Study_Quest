@@ -120,9 +120,14 @@ export default function BombGame() {
   };
 
   const getNextQuestion = (used) => {
+    // First try unused questions
     const available = questions.filter(q => !used.includes(q.id));
-    if (!available.length) return null;
-    return available[Math.floor(Math.random() * available.length)];
+    if (available.length > 0) return available[Math.floor(Math.random() * available.length)];
+    // All used — recycle from full pool (avoid immediate repeat if possible)
+    const lastUsed = used[used.length - 1];
+    const recycled = questions.filter(q => q.id !== lastUsed);
+    const fallback = recycled.length > 0 ? recycled : questions;
+    return fallback[Math.floor(Math.random() * fallback.length)];
   };
 
   const handleCellClick = (cell, e) => {
