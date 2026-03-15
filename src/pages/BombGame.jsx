@@ -251,7 +251,7 @@ export default function BombGame() {
     setPendingCell(null);
     setActiveQuestion(null);
 
-    setTimeout(() => checkLevelComplete(null, newUsed), 300);
+    setTimeout(() => checkLevelComplete(), 300);
   };
 
   const endGame = async (finalStats = gameStats) => {
