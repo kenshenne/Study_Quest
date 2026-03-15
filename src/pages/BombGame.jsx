@@ -137,9 +137,8 @@ export default function BombGame() {
 
     if (cell.isBomb) {
       // Bomb triggered - normal XP question
-      setPendingCell({ ...cell, action: "bomb" });
       const q = getNextQuestion(usedQuestions);
-      if (!q) { checkLevelComplete(); return; }
+      setPendingCell({ ...cell, action: "bomb" });
       setIsDoubleXP(false);
       setActiveQuestion(q);
     } else {
