@@ -157,9 +157,8 @@ export default function BombGame() {
       // Place flag
       if (cell.isBomb) {
         // Correct bomb flagged = double XP
-        setPendingCell({ ...cell, action: "flag_correct" });
         const q = getNextQuestion(usedQuestions);
-        if (!q) { checkLevelComplete(); return; }
+        setPendingCell({ ...cell, action: "flag_correct" });
         setIsDoubleXP(true);
         setActiveQuestion(q);
       } else {
