@@ -86,22 +86,6 @@ export default function Profile() {
     setSaving(false);
   };
 
-  const handlePhotoUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadingPhoto(true);
-    try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      const updated = await base44.entities.UserProfile.update(profile.id, { avatar: file_url });
-      setProfile(updated);
-      setSelectedAvatar(file_url);
-    } catch (err) {
-      alert("Photo upload is currently unavailable. Please try again later or choose an emoji avatar.");
-    } finally {
-      setUploadingPhoto(false);
-    }
-  };
-
   const searchFriends = async () => {
     if (!searchQuery.trim()) return;
     const q = searchQuery.trim();
