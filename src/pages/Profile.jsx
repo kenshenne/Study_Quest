@@ -204,17 +204,7 @@ export default function Profile() {
                 />
               </div>
               <div>
-                <label className="text-sm text-white/60 block mb-2">Profile Picture</label>
-                {/* Upload photo option */}
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingPhoto}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-violet-600/20 border border-violet-500/30 hover:bg-violet-600/30 rounded-xl text-sm text-violet-300 transition-colors mb-3 w-full"
-                >
-                  <Upload className="w-4 h-4" />
-                  {uploadingPhoto ? "Uploading..." : "Upload Photo from Gallery"}
-                </button>
-                <p className="text-xs text-white/30 mb-2">— or choose an avatar —</p>
+                <label className="text-sm text-white/60 block mb-2">Choose Avatar</label>
                 <div className="flex flex-wrap gap-2">
                   {AVATARS.map(a => (
                     <button
