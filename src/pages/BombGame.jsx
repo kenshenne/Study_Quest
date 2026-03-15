@@ -145,7 +145,7 @@ export default function BombGame() {
     } else {
       // Reveal safe cell
       revealCell(cell.index);
-      setTimeout(() => checkLevelComplete(), 100);
+      setTimeout(() => checkLevelComplete(null), 200);
     }
   };
 
