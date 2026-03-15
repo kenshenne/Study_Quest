@@ -31,8 +31,6 @@ export default function Profile() {
   const [friendProfiles, setFriendProfiles] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [saving, setSaving] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const fileInputRef = useRef(null);
 
   useEffect(() => {
     init();
