@@ -82,14 +82,19 @@ export default function BombGame() {
     const allQs = await base44.entities.Question.filter({ material_id: matId, user_id: user.email });
     if (!allQs.length) { alert("No questions found. Please upload study materials first."); return; }
     const diffQs = allQs.filter(q => q.difficulty === difficulty);
-    const pool = diffQs.length >= 5 ? diffQs : allQs;
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    setQuestions(shuffled);
+    const basePool = diffQs.length >= 5 ? diffQs : allQs;
+    const cfg = DIFFICULTY_GRID[difficulty];
+    const needed = cfg.bombs + 5; // ensure more than enough questions
+    // Pad pool by recycling if needed
+    let pool = [...basePool].sort(() => Math.random() - 0.5);
+    while (pool.length < needed) {
+      pool = [...pool, ...[...basePool].sort(() => Math.random() - 0.5)];
+    }
+    setQuestions(pool);
     setUsedQuestions([]);
-    setupLevel(shuffled, [], difficulty);
+    setupLevel(pool, [], difficulty);
     const stats = { correct: 0, incorrect: 0, total: 0, xp: 0, mistakes: [] };
     setGameStats(stats);
-    // Create session immediately so partial games are saved
     try {
       const s = await base44.entities.GameSession.create({
         user_id: user.email,
