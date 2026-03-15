@@ -5,7 +5,16 @@ import { Link } from "react-router-dom";
 import { UserPlus, Search, Check, X, LogOut, ChevronDown, ChevronUp, Star, MessageCircle, Camera, Upload } from "lucide-react";
 import MobileNav from "@/components/layout/MobileNav";
 
-const AVATARS = ["🎓", "🦁", "🐯", "🦊", "🐼", "🐸", "🦄", "🐉", "🤖", "👾", "🎮", "⚡", "🔥", "💎", "🌟"];
+const AVATARS = [
+  // Animals
+  "🐱", "🐶", "🐰", "🐹", "🐼", "🐨", "🦊", "🐸", "🦁", "🐯", "🐺", "🦝", "🐻", "🐮", "🐷",
+  "🐧", "🐦", "🦆", "🦉", "🐙", "🦋", "🐢", "🦕", "🐠", "🦈",
+  // Fantasy & Creatures
+  "🐉", "🦄", "👾", "🤖", "👻", "🎃", "🧸", "🪄", "🧿", "🌈",
+  // Game & Fun
+  "🎮", "⚡", "🔥", "💎", "🌟", "🎓", "🏆", "🎯", "🚀", "💫",
+  "🍀", "🌙", "⭐", "🎲", "🎸"
+];
 
 export default function Profile() {
   const [user, setUser] = useState(null);
