@@ -215,11 +215,14 @@ export default function BombGame() {
     setRevealedCount(prev => prev + 1);
   };
 
-  const checkLevelComplete = (currentGrid) => {
+  const checkLevelComplete = (currentGrid, currentStats) => {
     const g = currentGrid || grid;
-    const allRevealed = g.every(c => c.revealed || c.flagged);
-    if (allRevealed) {
-      setTimeout(() => endGame(undefined, true), 500);
+    const allDone = g.every(c => c.revealed || c.flagged);
+    if (allDone) {
+      const stats = currentStats || gameStats;
+      // Win only if no incorrect answers; lose if any incorrect
+      const won = stats.incorrect === 0;
+      setTimeout(() => endGame(stats, won), 500);
     }
   };
 
