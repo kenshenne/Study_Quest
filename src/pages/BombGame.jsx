@@ -45,12 +45,20 @@ function generateGrid(cols, rows, bombCount) {
   return cells;
 }
 
-// Grid sizes by difficulty: easy=6×6, medium=8×8, hard=10×10
+// Grid sizes by difficulty; bombs are randomized per game
 const DIFFICULTY_GRID = {
-  easy:   { cols: 6, rows: 6, bombs: 5 },
-  medium: { cols: 8, rows: 8, bombs: 12 },
-  hard:   { cols: 10, rows: 10, bombs: 20 }
+  easy:   { cols: 6,  rows: 6,  bombMin: 10, bombMax: 15 },
+  medium: { cols: 8,  rows: 8,  bombMin: 20, bombMax: 25 },
+  hard:   { cols: 10, rows: 10, bombMin: 30, bombMax: 35 }
 };
+
+function randomBombCount(diff, availableQs) {
+  const cfg = DIFFICULTY_GRID[diff];
+  // Scale max bombs based on available questions (more Qs = can allow more bombs)
+  const scaledMax = Math.min(cfg.bombMax, cfg.bombMin + Math.floor(availableQs / 3));
+  const max = Math.max(cfg.bombMin, scaledMax);
+  return cfg.bombMin + Math.floor(Math.random() * (max - cfg.bombMin + 1));
+}
 
 export default function BombGame() {
   const [user, setUser] = useState(null);
