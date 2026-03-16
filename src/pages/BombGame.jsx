@@ -247,23 +247,41 @@ export default function BombGame() {
     };
     setGameStats(newStats);
 
+    let updatedGrid = grid;
     if (pendingCell) {
       if (pendingCell.action === "bomb") {
-        // Reveal the bomb cell visually regardless of correct/incorrect
+        // Reveal the bomb cell regardless of correct/incorrect
         setGrid(prev => {
           const next = [...prev];
-          next[pendingCell.index] = { ...next[pendingCell.index], revealed: true };
+          next[pendingCell.index] = { ...next[pendingCell.index], revealed: true, flagged: false };
+          updatedGrid = next;
           return next;
         });
-      } else if (pendingCell.action === "flag_correct" && correct) {
-        toggleFlag(pendingCell.index);
+      } else if (pendingCell.action === "flag_correct") {
+        if (correct) {
+          // Correctly flagged and answered — keep flag
+          setGrid(prev => {
+            const next = [...prev];
+            next[pendingCell.index] = { ...next[pendingCell.index], flagged: true };
+            updatedGrid = next;
+            return next;
+          });
+        } else {
+          // Incorrectly answered — bomb triggers, reveal the tile
+          setGrid(prev => {
+            const next = [...prev];
+            next[pendingCell.index] = { ...next[pendingCell.index], revealed: true, flagged: false };
+            updatedGrid = next;
+            return next;
+          });
+        }
       }
     }
 
     setPendingCell(null);
     setActiveQuestion(null);
 
-    setTimeout(() => checkLevelComplete(), 300);
+    setTimeout(() => checkLevelComplete(updatedGrid, newStats), 300);
   };
 
   const endGame = async (finalStats = gameStats, won = false) => {
