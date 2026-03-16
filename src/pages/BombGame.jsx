@@ -120,10 +120,10 @@ export default function BombGame() {
     setPhase("playing");
   };
 
-  const setupLevel = (allQs, used, diff) => {
+  const setupLevel = (allQs, used, diff, bombCount) => {
     const cfg = DIFFICULTY_GRID[diff || difficulty];
     setLevelConfig(cfg);
-    setGrid(generateGrid(cfg.cols, cfg.rows, cfg.bombs));
+    setGrid(generateGrid(cfg.cols, cfg.rows, bombCount ?? randomBombCount(diff || difficulty, allQs?.length || 10)));
     setRevealedCount(0);
     setFlagCount(0);
   };
