@@ -70,23 +70,10 @@ export default function Dashboard() {
     );
   }
 
-  const games = [
-    { id: "maze", name: "Maze Quiz", icon: <Swords className="w-7 h-7" />, desc: "Navigate a maze and answer questions at checkpoints", color: "from-violet-600 to-purple-700", glow: "shadow-violet-500/30", page: "MazeGame" },
-    { id: "bomb", name: "Bomb Grid", icon: <Bomb className="w-7 h-7" />, desc: "Minesweeper-style: bombs trigger study questions", color: "from-rose-600 to-red-700", glow: "shadow-rose-500/30", page: "BombGame" },
-    { id: "blast", name: "Tetriquiz", icon: <Layers className="w-7 h-7" />, desc: "Clear Tetris lines and answer quiz questions to continue", color: "from-emerald-600 to-teal-700", glow: "shadow-emerald-500/30", page: "BlastGame" }
-  ];
-
   const xpToNextLevel = (profile?.level || 1) * 200;
   const currentXP = (profile?.xp || 0) % xpToNextLevel;
   const xpPercent = Math.min((currentXP / xpToNextLevel) * 100, 100);
   const gameLabels = { maze: "Maze Quiz", bomb: "Bomb Grid", blast: "Tetriquiz" };
-
-  const navLinks = [
-    { to: "Upload", icon: <Upload className="w-4 h-4" />, label: "Materials" },
-    { to: "Leaderboard", icon: <Trophy className="w-4 h-4" />, label: "Leaderboard" },
-    { to: "Chat", icon: <MessageCircle className="w-4 h-4" />, label: "Chat", badge: unreadMessages },
-    { to: "Profile", icon: <User className="w-4 h-4" />, label: "Profile" },
-  ];
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
