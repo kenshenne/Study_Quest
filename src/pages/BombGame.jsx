@@ -225,17 +225,6 @@ export default function BombGame() {
     setRevealedCount(prev => prev + 1);
   };
 
-  const checkLevelComplete = (currentGrid, currentStats) => {
-    const g = currentGrid || grid;
-    const allDone = g.every(c => c.revealed || c.flagged);
-    if (allDone) {
-      const stats = currentStats || gameStats;
-      // Win only if no incorrect answers; lose if any incorrect
-      const won = stats.incorrect === 0;
-      setTimeout(() => endGame(stats, won), 500);
-    }
-  };
-
   const handleAnswer = (correct) => {
     const q = activeQuestion;
     const newUsed = [...usedQuestions, q.id];
