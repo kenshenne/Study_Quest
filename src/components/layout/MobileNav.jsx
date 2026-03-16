@@ -7,7 +7,7 @@ import { Menu, X, Zap, LayoutDashboard, Upload, Swords, Trophy, User, MessageCir
 const NAV_ITEMS = [
   { label: "Dashboard", to: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
   { label: "Materials", to: "Upload", icon: <Upload className="w-5 h-5" /> },
-  { label: "Games", to: "Dashboard", icon: <Swords className="w-5 h-5" /> },
+  { label: "Games", to: "Games", icon: <Swords className="w-5 h-5" /> },
   { label: "Leaderboard", to: "Leaderboard", icon: <Trophy className="w-5 h-5" /> },
   { label: "Chat", to: "Chat", icon: <MessageCircle className="w-5 h-5" /> },
   { label: "Profile", to: "Profile", icon: <User className="w-5 h-5" /> },
