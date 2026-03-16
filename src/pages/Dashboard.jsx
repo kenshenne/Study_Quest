@@ -114,11 +114,12 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-3 md:gap-4 mb-8 md:mb-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
           {[
             { label: "Questions Answered", value: profile?.total_questions_answered || 0, icon: "📝" },
             { label: "Accuracy Rate", value: `${Math.round(profile?.accuracy_rate || 0)}%`, icon: "🎯" },
-            { label: "Achievements", value: achievements.length, icon: "🏆" }
+            { label: "Achievements", value: achievements.length, icon: "🏆" },
+            { label: "Games Played", value: recentSessions.length, icon: "🎮" }
           ].map((stat) => (
             <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
               <div className="text-2xl mb-1">{stat.icon}</div>
@@ -128,37 +129,14 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Game Modes */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-violet-400" /> Games
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
-            {games.map((game) => (
-              <Link key={game.id} to={createPageUrl(game.page)}>
-                <div className={`group relative bg-gradient-to-br ${game.color} p-[1px] rounded-2xl shadow-xl ${game.glow} hover:scale-[1.02] transition-all duration-200 cursor-pointer`}>
-                  <div className="bg-[#0f0f17] rounded-2xl p-6 h-full">
-                    <div className="mb-4 opacity-90">{game.icon}</div>
-                    <h3 className="font-bold text-lg mb-2">{game.name}</h3>
-                    <p className="text-white/50 text-sm leading-relaxed">{game.desc}</p>
-                    <div className={`mt-4 text-xs font-semibold bg-gradient-to-r ${game.color} bg-clip-text text-transparent`}>
-                      Play Now →
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
-          {/* Recent Games */}
+          {/* Recent Activity */}
           <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
             <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-violet-400" /> Recent Games
+              <FileText className="w-4 h-4 text-violet-400" /> Recent Activity
             </h3>
             {recentSessions.length === 0 ? (
-              <p className="text-white/30 text-sm">No games played yet. Pick a game above!</p>
+              <p className="text-white/30 text-sm">No games played yet. Head to Games to start playing!</p>
             ) : (
               <div className="space-y-2">
                 {recentSessions.map(s => (
@@ -213,15 +191,51 @@ export default function Dashboard() {
           />
         )}
 
-        {/* Upload CTA */}
-        <div className="mt-5 bg-white/5 border border-white/10 rounded-2xl p-5 md:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h3 className="font-semibold mb-1">Upload Study Materials</h3>
-            <p className="text-white/40 text-sm">Upload PDFs, slides, or notes to generate questions automatically</p>
+        {/* Performance Summary */}
+        <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-emerald-400" /> Performance Summary
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <div className="flex justify-between text-xs text-white/50 mb-1">
+                  <span>Overall Accuracy</span>
+                  <span>{Math.round(profile?.accuracy_rate || 0)}%</span>
+                </div>
+                <div className="bg-white/10 rounded-full h-2">
+                  <div className="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full" style={{ width: `${Math.round(profile?.accuracy_rate || 0)}%` }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-xs text-white/50 mb-1">
+                  <span>Total Correct Answers</span>
+                  <span>{profile?.total_correct || 0} / {profile?.total_questions_answered || 0}</span>
+                </div>
+                <div className="bg-white/10 rounded-full h-2">
+                  <div className="bg-gradient-to-r from-violet-500 to-purple-400 h-2 rounded-full"
+                    style={{ width: `${profile?.total_questions_answered > 0 ? Math.round(((profile?.total_correct || 0) / profile.total_questions_answered) * 100) : 0}%` }} />
+                </div>
+              </div>
+            </div>
           </div>
-          <Link to={createPageUrl("Upload")} className="px-5 py-2.5 bg-violet-600 hover:bg-violet-500 rounded-xl text-sm font-semibold transition-colors">
-            Upload →
-          </Link>
+
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col justify-between">
+            <div>
+              <h3 className="font-semibold mb-1 flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-violet-400" /> Study Materials
+              </h3>
+              <p className="text-white/40 text-sm">Upload PDFs, slides, or notes to generate quiz questions automatically</p>
+            </div>
+            <div className="mt-4 flex gap-3">
+              <Link to={createPageUrl("Upload")} className="flex-1 py-2.5 bg-violet-600 hover:bg-violet-500 rounded-xl text-sm font-semibold transition-colors text-center">
+                Upload Materials →
+              </Link>
+              <Link to={createPageUrl("Games")} className="flex-1 py-2.5 bg-white/10 hover:bg-white/15 rounded-xl text-sm font-semibold transition-colors text-center flex items-center justify-center gap-1.5">
+                <Swords className="w-4 h-4" /> Play Games
+              </Link>
+            </div>
+          </div>
         </div>
       </main>
     </div>
