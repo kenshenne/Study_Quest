@@ -151,9 +151,9 @@ export default function BombGame() {
       setIsDoubleXP(false);
       setActiveQuestion(q);
     } else {
-      // Reveal safe cell
+      // Reveal safe cell — read grid after state update via a small delay
       revealCell(cell.index);
-      setTimeout(() => checkLevelComplete(null), 200);
+      setTimeout(() => checkLevelComplete(null, gameStats), 250);
     }
   };
 
