@@ -87,6 +87,17 @@ export default function BombGame() {
     }).catch(() => base44.auth.redirectToLogin(createPageUrl("BombGame")));
   }, []);
 
+  // Reliable completion check: fires after every grid state update while playing
+  useEffect(() => {
+    if (phase !== "playing" || grid.length === 0 || activeQuestion) return;
+    const allDone = grid.every(c => c.revealed || c.flagged);
+    if (allDone) {
+      const won = gameStats.incorrect === 0;
+      const timer = setTimeout(() => endGame(gameStats, won), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [grid, phase]);
+
   const startGame = async (matId) => {
     const allQs = await base44.entities.Question.filter({ material_id: matId, user_id: user.email });
     if (!allQs.length) { alert("No questions found. Please upload study materials first."); return; }
