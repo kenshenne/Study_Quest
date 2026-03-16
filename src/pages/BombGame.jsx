@@ -92,8 +92,8 @@ export default function BombGame() {
     if (!allQs.length) { alert("No questions found. Please upload study materials first."); return; }
     const diffQs = allQs.filter(q => q.difficulty === difficulty);
     const basePool = diffQs.length >= 5 ? diffQs : allQs;
-    const cfg = DIFFICULTY_GRID[difficulty];
-    const needed = cfg.bombs + 5; // ensure more than enough questions
+    const bombCount = randomBombCount(difficulty, basePool.length);
+    const needed = bombCount + 5;
     // Pad pool by recycling if needed
     let pool = [...basePool].sort(() => Math.random() - 0.5);
     while (pool.length < needed) {
@@ -101,7 +101,7 @@ export default function BombGame() {
     }
     setQuestions(pool);
     setUsedQuestions([]);
-    setupLevel(pool, [], difficulty);
+    setupLevel(pool, [], difficulty, bombCount);
     const stats = { correct: 0, incorrect: 0, total: 0, xp: 0, mistakes: [] };
     setGameStats(stats);
     try {
