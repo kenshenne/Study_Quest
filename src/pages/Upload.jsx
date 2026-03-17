@@ -444,11 +444,7 @@ Generate exactly ${count} questions now.`;
       setMaterials(mats);
     } catch (e) {
       const msg = e?.message || "";
-      if (msg.toLowerCase().includes("word") || msg.toLowerCase().includes("limit")) {
-        setError("The uploaded file exceeds the 2,500-word limit. Please shorten the content before generating questions.");
-      } else if (msg.toLowerCase().includes("extract") || msg.toLowerCase().includes("parse")) {
-        setError("Failed to extract text from the uploaded document. Please try a PDF or paste your text directly.");
-      } else if (msg.toLowerCase().includes("network") || msg.toLowerCase().includes("fetch")) {
+      if (msg.toLowerCase().includes("network") || msg.toLowerCase().includes("fetch")) {
         setError("Network error. Please check your connection and try again.");
       } else {
         setError("AI service request failed. Please try again in a moment.");
