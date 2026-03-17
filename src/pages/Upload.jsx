@@ -55,7 +55,7 @@ function isSupportedFile(file) {
 const EXTRACTABLE_TYPES = ["pdf", "pptx", "image"];
 
 function FileIcon({ type }) {
-  const icons = { pdf: "📄", pptx: "📊", image: "🖼️", text: "📝" };
+  const icons = { pdf: "📄", pptx: "📊", image: "🖼️", text: "📝", doc: "📝" };
   return <span className="text-2xl">{icons[type] || "📄"}</span>;
 }
 
