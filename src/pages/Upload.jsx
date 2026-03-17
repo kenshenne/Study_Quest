@@ -534,32 +534,8 @@ Generate exactly ${count} questions now.`;
                 <>
                   <UploadIcon className="w-10 h-10 mx-auto mb-3 text-white/20" />
                   <p className="font-medium text-white/60 mb-1">Drop your file here or click to browse</p>
-                  <p className="text-xs text-white/30">Supports PDF, PowerPoint, images, text files</p>
+                  <p className="text-xs text-white/30">PDF, PPT, DOC, TXT, JPG, PNG</p>
                 </>
-              )}
-              {/* Single image upload */}
-              {!file && (
-                <div className="mt-3 pt-3 border-t border-white/5">
-                  <label className="text-xs text-white/40 block mb-2">Or upload an image</label>
-                  <input id="multiImgInput" type="file" accept=".png,.jpg,.jpeg,.gif,.webp" className="hidden"
-                    onChange={e => {
-                      const files = Array.from(e.target.files || []);
-                      if (files.length > 1) { setError("Only one image can be uploaded at a time."); return; }
-                      if (files.length === 1) {
-                        const f = files[0];
-                        const sizeMB = f.size / (1024 * 1024);
-                        if (sizeMB > MAX_IMAGE_MB) { setError(`File size exceeds the maximum allowed limit of ${MAX_IMAGE_MB} MB.`); return; }
-                        setExtraImages([f]); setError("");
-                      }
-                    }} />
-                  <button type="button" onClick={e => { e.stopPropagation(); document.getElementById("multiImgInput").click(); }}
-                    className="px-3 py-1.5 bg-white/8 hover:bg-white/12 rounded-lg text-xs text-white/60 transition-colors">
-                    Select image
-                  </button>
-                  {extraImages.length > 0 && (
-                    <p className="text-xs text-emerald-400 mt-1">{extraImages[0].name}</p>
-                  )}
-                </div>
               )}
             </div>
 
