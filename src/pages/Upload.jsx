@@ -100,9 +100,13 @@ export default function Upload() {
   };
 
   const handleFileSelect = (f) => {
+    if (!isSupportedFile(f)) {
+      setError("Unsupported file format. Please upload a PDF, PPT, DOC, TXT, or image file (.jpg, .jpeg, .png).");
+      return;
+    }
     const type = getFileType(f);
     const sizeMB = f.size / (1024 * 1024);
-    const maxMB = type === "pdf" ? MAX_PDF_MB : type === "pptx" ? MAX_PPT_MB : MAX_IMAGE_MB;
+    const maxMB = type === "pdf" ? MAX_PDF_MB : type === "pptx" ? MAX_PPT_MB : type === "image" ? MAX_IMAGE_MB : MAX_DOC_MB;
     if (sizeMB > maxMB) {
       setError(`File size exceeds the maximum allowed limit of ${maxMB} MB.`);
       return;
