@@ -515,7 +515,7 @@ Generate exactly ${count} questions now.`;
                 file ? "border-violet-500/40 bg-violet-500/5 cursor-default" : "border-white/10 hover:border-violet-500/40 hover:bg-white/3"
               }`}
             >
-              <input id="fileInput" type="file" accept=".pdf,.pptx,.ppt,.png,.jpg,.jpeg,.txt,.docx" className="hidden"
+              <input id="fileInput" type="file" accept=".pdf,.pptx,.ppt,.doc,.docx,.txt,.jpg,.jpeg,.png" className="hidden"
                 onChange={e => e.target.files[0] && handleFileSelect(e.target.files[0])} />
 
               {file ? (
