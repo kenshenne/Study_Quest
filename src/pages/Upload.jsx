@@ -142,11 +142,11 @@ export default function Upload() {
 
     let content = textContent;
 
-    // Validate text input word count before sending to AI
+    // Validate pasted text word count
     if (!file && extraImages.length === 0) {
       const inputWords = content.trim().split(/\s+/).filter(w => w.length > 0).length;
       if (inputWords > MAX_TEXT_WORDS) {
-        setError(`The input exceeds the maximum limit of ${MAX_TEXT_WORDS.toLocaleString()} words (found ${inputWords.toLocaleString()} words). Please shorten the content before generating questions.`);
+        setError(`The input exceeds the maximum limit of ${MAX_TEXT_WORDS.toLocaleString()} words. Please shorten the content.`);
         setStep(1); return;
       }
     }
@@ -156,7 +156,7 @@ export default function Upload() {
         const fileType = getFileType(file);
 
         if (!EXTRACTABLE_TYPES.includes(fileType)) {
-          // For unsupported types like .docx, .txt — read as plain text
+          // .txt, .doc, .docx — read as plain text
           setProgressStep("Reading file content...");
           setProgressPct(20);
           const textFromFile = await new Promise((resolve, reject) => {
@@ -167,6 +167,10 @@ export default function Upload() {
           });
           if (!textFromFile || textFromFile.trim().length < 50) {
             setError("Failed to extract text from the uploaded document. Please try a PDF or paste your text directly.");
+            setStep(1); return;
+          }
+          if (!isTextMeaningful(textFromFile)) {
+            setError("Questions cannot be generated because the uploaded material does not contain meaningful or readable study content.");
             setStep(1); return;
           }
           content = textFromFile;
@@ -185,25 +189,42 @@ export default function Upload() {
           }
           setProgressPct(30);
 
+          // For images: first use LLM to check if it contains educational content
+          if (fileType === "image") {
+            setProgressStep("Checking image content...");
+            const imageCheck = await base44.integrations.Core.InvokeLLM({
+              prompt: `Look at this image carefully. Does it contain readable educational content such as text, notes, study material, slides, diagrams with labels, screenshots of lessons, or any written information useful for studying?\n\nRespond only with a JSON object.`,
+              file_urls: [file_url],
+              response_json_schema: {
+                type: "object",
+                properties: {
+                  has_educational_content: { type: "boolean" },
+                  reason: { type: "string" }
+                },
+                required: ["has_educational_content"]
+              }
+            });
+            if (!imageCheck.has_educational_content) {
+              setError("Questions cannot be generated because the uploaded image does not contain readable study information.");
+              setStep(1); return;
+            }
+          }
+
           let result;
           try {
             result = await base44.integrations.Core.ExtractDataFromUploadedFile({
               file_url,
               json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
             });
-          } catch (extractErr) {
-            // If extraction API fails, try LLM-based extraction as fallback
+          } catch {
+            // Fallback: LLM-based extraction
             try {
               const llmResult = await base44.integrations.Core.InvokeLLM({
-                prompt: `Extract all readable text content from this document. Return all text you can read, including titles, headings, paragraphs, bullet points, formulas, and any other content. Do not summarize — return the raw text as-is.`,
+                prompt: `Extract all readable text content from this document. Return all text including titles, headings, paragraphs, bullet points, formulas. Do not summarize — return raw text as-is.`,
                 file_urls: [file_url],
                 response_json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
               });
               if (llmResult?.text && llmResult.text.trim().length >= 30) {
-                content = llmResult.text;
-                setExtractedContent(content);
-                setProgressPct(45);
-                // Skip to after extraction block
                 result = { status: "success", output: { text: llmResult.text } };
               } else {
                 setError("Failed to extract text from the uploaded document. Please try pasting your text directly.");
@@ -222,15 +243,11 @@ export default function Upload() {
               setStep(1); return;
             }
             if (!isTextMeaningful(extracted)) {
-              setError("The uploaded file does not contain enough meaningful text to generate questions. Please try a different document.");
+              setError("Questions cannot be generated because the uploaded material does not contain meaningful or readable study content.");
               setStep(1); return;
             }
-            const extractedWords = extracted.trim().split(/\s+/).filter(w => w.length > 0).length;
-            if (extractedWords > MAX_EXTRACTED_WORDS) {
-              content = extracted.trim().split(/\s+/).slice(0, MAX_EXTRACTED_WORDS).join(" ");
-            } else {
-              content = extracted;
-            }
+            // No word limit for PDF/PPT — just use full extracted content (trimmed to AI context limit)
+            content = extracted;
             setExtractedContent(content);
           } else if (!content) {
             setError("Failed to extract text from the uploaded document. Please ensure it contains readable text.");
@@ -239,7 +256,7 @@ export default function Upload() {
           setProgressPct(45);
         }
       } else if (extraImages.length > 0) {
-        setProgressStep("Extracting text from image...");
+        setProgressStep("Checking image content...");
         setProgressPct(15);
         const img = extraImages[0];
         let file_url;
@@ -250,6 +267,27 @@ export default function Upload() {
           setError("Failed to upload the image. Please check your connection and try again.");
           setStep(1); return;
         }
+
+        // Check if image has educational content before extracting
+        const imageCheck = await base44.integrations.Core.InvokeLLM({
+          prompt: `Look at this image carefully. Does it contain readable educational content such as text, notes, study material, slides, diagrams with labels, screenshots of lessons, or any written information useful for studying?\n\nRespond only with a JSON object.`,
+          file_urls: [file_url],
+          response_json_schema: {
+            type: "object",
+            properties: {
+              has_educational_content: { type: "boolean" },
+              reason: { type: "string" }
+            },
+            required: ["has_educational_content"]
+          }
+        });
+        if (!imageCheck.has_educational_content) {
+          setError("Questions cannot be generated because the uploaded image does not contain readable study information.");
+          setStep(1); return;
+        }
+
+        setProgressStep("Extracting text from image...");
+        setProgressPct(30);
         let result;
         try {
           result = await base44.integrations.Core.ExtractDataFromUploadedFile({
@@ -260,7 +298,11 @@ export default function Upload() {
           setError("Failed to extract text from the image.");
           setStep(1); return;
         }
-        if (result.status === "success" && result.output?.text && result.output.text.trim().length >= 50) {
+        if (result.status === "success" && result.output?.text && result.output.text.trim().length >= 30) {
+          if (!isTextMeaningful(result.output.text)) {
+            setError("Questions cannot be generated because the uploaded image does not contain readable study information.");
+            setStep(1); return;
+          }
           content = result.output.text;
           setExtractedContent(content);
         } else {
