@@ -14,18 +14,26 @@ const QUESTION_COUNT = 45;
 const MAX_PDF_MB = 10;
 const MAX_PPT_MB = 20;
 const MAX_IMAGE_MB = 5;
+const MAX_DOC_MB = 10;
 const MAX_TEXT_WORDS = 5000;
-const MAX_EXTRACTED_WORDS = 5000;
+
+// Supported file extensions
+const SUPPORTED_EXTENSIONS = [".pdf", ".ppt", ".pptx", ".doc", ".docx", ".txt", ".jpg", ".jpeg", ".png"];
 
 function isTextMeaningful(text) {
   if (!text || text.trim().length < 30) return false;
   const words = text.trim().split(/\s+/).filter(w => w.length > 0);
   if (words.length < 10) return false;
-  // Accept math/science content that may have numbers, symbols, and short words
+  // Accept math/science content with numbers/symbols
   const hasMath = /[\d=+\-*/^()]+/.test(text);
   if (hasMath) return true;
-  const realWords = words.filter(w => w.length >= 2 && /[a-zA-Z]/.test(w));
-  return realWords.length / words.length > 0.25;
+  // Check that a reasonable portion of "words" look like real words (not random chars)
+  const realWords = words.filter(w => w.length >= 2 && /[a-zA-Z]{2,}/.test(w));
+  if (realWords.length / words.length < 0.25) return false;
+  // Detect random-character strings: avg word length > 12 is suspicious
+  const avgLen = realWords.reduce((s, w) => s + w.length, 0) / (realWords.length || 1);
+  if (avgLen > 14) return false;
+  return true;
 }
 
 function getFileType(file) {
@@ -33,8 +41,14 @@ function getFileType(file) {
   const name = file.name.toLowerCase();
   if (name.endsWith(".pdf")) return "pdf";
   if (name.endsWith(".pptx") || name.endsWith(".ppt")) return "pptx";
-  if (name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".gif") || name.endsWith(".webp")) return "image";
-  return "text"; // .txt, .docx, etc.
+  if (name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg")) return "image";
+  if (name.endsWith(".doc") || name.endsWith(".docx")) return "doc";
+  return "text"; // .txt
+}
+
+function isSupportedFile(file) {
+  const name = file.name.toLowerCase();
+  return SUPPORTED_EXTENSIONS.some(ext => name.endsWith(ext));
 }
 
 // File types supported by ExtractDataFromUploadedFile
