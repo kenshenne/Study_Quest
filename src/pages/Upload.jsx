@@ -324,6 +324,11 @@ export default function Upload() {
         setStep(1); return;
       }
 
+      // Safely truncate to AI context limit
+      if (content.length > MAX_AI_CONTENT_CHARS) {
+        content = content.slice(0, MAX_AI_CONTENT_CHARS);
+      }
+
       setProgressStep("Saving material...");
       setProgressPct(50);
       const material = await base44.entities.StudyMaterial.create({
