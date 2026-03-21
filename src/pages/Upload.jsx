@@ -354,7 +354,7 @@ This material may have been extracted from a PDF, PowerPoint, images, or math/sc
 ═══════════════════════════════════
 STUDY MATERIAL:
 ═══════════════════════════════════
-${content.slice(0, 14000)}
+${content}
 ═══════════════════════════════════
 
 TASK: Generate exactly ${count} questions split across three difficulty levels.
@@ -559,11 +559,12 @@ Generate exactly ${count} questions now.`;
 
             {/* File size limits info */}
             <div className="bg-white/3 border border-white/8 rounded-xl px-4 py-3 text-xs text-white/40 space-y-0.5">
-              <p>📄 PDF: Max {MAX_PDF_MB} MB</p>
-              <p>📊 PPT / PPTX: Max {MAX_PPT_MB} MB</p>
-              <p>📝 DOC / DOCX / TXT: Max {MAX_DOC_MB} MB</p>
-              <p>🖼️ Image (JPG, PNG): Max {MAX_IMAGE_MB} MB · must contain readable text</p>
-              <p>✍️ Pasted text: Max {MAX_TEXT_WORDS.toLocaleString()} words</p>
+              <p className="font-semibold text-white/50 mb-1">Upload Limits</p>
+              <p>📄 PDF — Max {MAX_PDF_MB} MB</p>
+              <p>📊 PPT / PPTX — Max {MAX_PPT_MB} MB</p>
+              <p>📝 DOC / DOCX / TXT — Max {MAX_DOC_MB} MB</p>
+              <p>🖼️ Image (JPG, PNG) — Max {MAX_IMAGE_MB} MB · must contain readable text</p>
+              <p>✍️ Pasted text — Max {MAX_TEXT_WORDS.toLocaleString()} words</p>
             </div>
 
             {/* Text Input */}
