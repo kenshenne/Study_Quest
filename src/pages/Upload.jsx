@@ -211,8 +211,9 @@ export default function Upload() {
             setError("Failed to extract text from the uploaded document. Please try a PDF or paste your text directly.");
             setStep(1); return;
           }
+          // basic sanity check for plain text files — isTextMeaningful is sufficient here
           if (!isTextMeaningful(textFromFile)) {
-            setError("Questions cannot be generated because the uploaded material does not contain meaningful or readable study content.");
+            setError("No readable text found in the uploaded file. Please upload a document with visible text content.");
             setStep(1); return;
           }
           content = textFromFile;
