@@ -29,16 +29,16 @@ const SUPPORTED_EXTENSIONS = [".pdf", ".ppt", ".pptx", ".doc", ".docx", ".txt", 
 function isTextMeaningful(text) {
   if (!text || text.trim().length < 30) return false;
   const words = text.trim().split(/\s+/).filter(w => w.length > 0);
-  if (words.length < 10) return false;
+  if (words.length < 5) return false;
   // Accept math/science content with numbers/symbols
-  const hasMath = /[\d=+\-*/^()]+/.test(text);
-  if (hasMath) return true;
-  // Check that a reasonable portion of "words" look like real words (not random chars)
-  const realWords = words.filter(w => w.length >= 2 && /[a-zA-Z]{2,}/.test(w));
-  if (realWords.length / words.length < 0.25) return false;
-  // Detect random-character strings: avg word length > 12 is suspicious
-  const avgLen = realWords.reduce((s, w) => s + w.length, 0) / (realWords.length || 1);
-  if (avgLen > 14) return false;
+  const hasMath = /[\d=+\-*/^()[\]{}]+/.test(text);
+  if (hasMath && words.length >= 5) return true;
+  // Check that at least some words look like real words (not random binary/encoded chars)
+  const realWords = words.filter(w => /[a-zA-Z]{2,}/.test(w));
+  if (realWords.length === 0) return false;
+  // Detect pure binary/base64 garbage: avg word length > 20 is suspicious
+  const avgLen = realWords.reduce((s, w) => s + w.length, 0) / realWords.length;
+  if (avgLen > 20) return false;
   return true;
 }
 
