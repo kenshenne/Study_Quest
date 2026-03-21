@@ -90,7 +90,7 @@ Is the student's answer correct?`,
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-white/5">
           <div className="flex items-center gap-2">
-            <span className={`text-xs px-2 py-1 rounded-lg border ${difficultyColor} capitalize`}>{question.difficulty}</span>
+            <span className={`text-xs px-2 py-1 rounded-lg border ${difficultyColor} capitalize`}></span>
             <span className="text-xs text-white/30">{typeLabel}</span>
             {doubleXP && <span className="text-xs px-2 py-1 rounded-lg border border-yellow-500/30 bg-yellow-500/10 text-yellow-400">2× XP</span>}
           </div>
