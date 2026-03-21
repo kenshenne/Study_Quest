@@ -11,11 +11,17 @@ import MobileNav from "@/components/layout/MobileNav";
 const STEPS = ["Upload", "Configure", "Generate"];
 
 const QUESTION_COUNT = 45;
-const MAX_PDF_MB = 10;
-const MAX_PPT_MB = 20;
-const MAX_IMAGE_MB = 5;
-const MAX_DOC_MB = 10;
-const MAX_TEXT_WORDS = 5000;
+
+// ─── AI Processing Limits ───────────────────────────────────────────────────
+// File upload size limits (MB)
+const MAX_PDF_MB = 15;       // PDFs: up to 15 MB (text extraction handles large files)
+const MAX_PPT_MB = 25;       // PPT/PPTX: up to 25 MB (slides often embed images)
+const MAX_IMAGE_MB = 5;      // Images: 5 MB max for reliable OCR
+const MAX_DOC_MB = 10;       // DOC/DOCX/TXT: 10 MB
+
+// Text length limits
+const MAX_TEXT_WORDS = 8000;       // Max words for pasted text input
+const MAX_AI_CONTENT_CHARS = 50000; // Max chars sent to AI (~12k words / ~16k tokens — safe context limit)
 
 // Supported file extensions
 const SUPPORTED_EXTENSIONS = [".pdf", ".ppt", ".pptx", ".doc", ".docx", ".txt", ".jpg", ".jpeg", ".png"];
