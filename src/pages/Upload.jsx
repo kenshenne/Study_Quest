@@ -508,7 +508,29 @@ Generate exactly ${count} questions now (${easyCount} easy + ${mediumCount} medi
       setProgressStep("Saving questions...");
       setProgressPct(85);
 
-      const questions = response.questions || [];
+      const rawQuestions = response.questions || [];
+
+      // Enforce type rules — correct any violations from the LLM
+      const ALLOWED_TYPES = {
+        easy: ["multiple_choice"],
+        medium: ["multiple_choice", "identification"],
+        hard: ["multiple_choice", "identification", "enumeration", "fill_blank"]
+      };
+      const questions = rawQuestions.map(q => {
+        const diff = q.difficulty || "medium";
+        const allowed = ALLOWED_TYPES[diff] || ALLOWED_TYPES.medium;
+        if (!allowed.includes(q.question_type)) {
+          // Fall back to the primary type for that difficulty
+          const fallback = allowed[0];
+          return {
+            ...q,
+            question_type: fallback,
+            options: fallback === "multiple_choice" ? (q.options?.length === 4 ? q.options : [q.correct_answer, "Option B", "Option C", "Option D"]) : []
+          };
+        }
+        return q;
+      });
+
       if (questions.length > 0) {
         await base44.entities.Question.bulkCreate(
           questions.map(q => ({
