@@ -36,9 +36,46 @@ function isTextMeaningful(text) {
   // Reject pure binary/base64: avg word length > 25 chars is garbage
   const avgLen = realWords.reduce((s, w) => s + w.length, 0) / realWords.length;
   if (avgLen > 25) return false;
-  // At least 20% of words should be real alphabetical words
-  if (realWords.length / words.length < 0.15) return false;
   return true;
+}
+
+// Uses LLM to validate extracted text is readable study material
+async function validateExtractedText(text) {
+  const sample = text.slice(0, 3000); // send a sample to keep it fast
+  try {
+    const result = await base44.integrations.Core.InvokeLLM({
+      prompt: `You are a document content validator. Analyze the following extracted text and determine if it contains readable, meaningful content.
+
+Classify as "Readable Text Found" if the text contains ANY of:
+- Definitions or explanations of concepts
+- Educational content (science, math, history, etc.)
+- Structured lessons, notes, or topics
+- Headings, bullet points, or organized sections
+- Examples that support learning
+- Any meaningful words or sentences (even if formatting is messy or slide-based)
+
+Classify as "No Readable Text Found" ONLY if the content is:
+- Completely empty or whitespace
+- Random symbols with no meaning
+- Corrupted/binary data with no readable words
+
+Extracted text:
+---
+${sample}
+---
+
+Output ONLY one of these exact strings: "Readable Text Found" or "No Readable Text Found"`,
+      response_json_schema: {
+        type: "object",
+        properties: { result: { type: "string", enum: ["Readable Text Found", "No Readable Text Found"] } },
+        required: ["result"]
+      }
+    });
+    return result?.result === "Readable Text Found";
+  } catch {
+    // If validation call fails, fall back to basic check
+    return isTextMeaningful(text);
+  }
 }
 
 function getFileType(file) {
