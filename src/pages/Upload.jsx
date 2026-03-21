@@ -27,18 +27,17 @@ const MAX_AI_CONTENT_CHARS = 50000; // Max chars sent to AI (~12k words / ~16k t
 const SUPPORTED_EXTENSIONS = [".pdf", ".ppt", ".pptx", ".doc", ".docx", ".txt", ".jpg", ".jpeg", ".png"];
 
 function isTextMeaningful(text) {
-  if (!text || text.trim().length < 30) return false;
+  if (!text || text.trim().length < 10) return false;
   const words = text.trim().split(/\s+/).filter(w => w.length > 0);
-  if (words.length < 5) return false;
-  // Accept math/science content with numbers/symbols
-  const hasMath = /[\d=+\-*/^()[\]{}]+/.test(text);
-  if (hasMath && words.length >= 5) return true;
-  // Check that at least some words look like real words (not random binary/encoded chars)
+  if (words.length < 3) return false;
+  // Check for real alphabetical words (at least 2 chars with letters)
   const realWords = words.filter(w => /[a-zA-Z]{2,}/.test(w));
   if (realWords.length === 0) return false;
-  // Detect pure binary/base64 garbage: avg word length > 20 is suspicious
+  // Reject pure binary/base64: avg word length > 25 chars is garbage
   const avgLen = realWords.reduce((s, w) => s + w.length, 0) / realWords.length;
-  if (avgLen > 20) return false;
+  if (avgLen > 25) return false;
+  // At least 20% of words should be real alphabetical words
+  if (realWords.length / words.length < 0.15) return false;
   return true;
 }
 
