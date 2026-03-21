@@ -102,8 +102,7 @@ export default function BombGame() {
   const startGame = async (matId) => {
     const allQs = await base44.entities.Question.filter({ material_id: matId, user_id: user.email });
     if (!allQs.length) { alert("No questions found. Please upload study materials first."); return; }
-    const diffQs = allQs.filter(q => q.difficulty === difficulty);
-    const basePool = diffQs.length >= 5 ? diffQs : allQs;
+    const basePool = buildQuestionPool(allQs, difficulty, 5);
     const bombCount = randomBombCount(difficulty, basePool.length);
     const needed = bombCount + 5;
     // Pad pool by recycling if needed
