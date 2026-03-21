@@ -407,6 +407,11 @@ Return only the extracted text. If truly no text exists anywhere, return an empt
 
       const count = QUESTION_COUNT;
 
+      const easyCount = Math.round(count * 0.35);
+      const mediumCount = Math.round(count * 0.40);
+      const hardCount = count - easyCount - mediumCount;
+      const hardPerType = Math.floor(hardCount / 4);
+
       const prompt = `You are an expert educational question generator for a gamified learning app. Create high-quality study questions STRICTLY based on the provided material.
 
 This material may have been extracted from a PDF, PowerPoint, images, or math/science documents. Support ALL content types including:
@@ -421,51 +426,58 @@ STUDY MATERIAL:
 ${content}
 ═══════════════════════════════════
 
-TASK: Generate exactly ${count} questions split across three difficulty levels.
+TASK: Generate exactly ${count} questions split across three difficulty levels as follows:
 
-DIFFICULTY DISTRIBUTION AND QUESTION TYPES — STRICTLY FOLLOW THESE RULES:
-
-EASY (~35%, ~${Math.round(count * 0.35)} questions):
-- question_type MUST be "multiple_choice" ONLY. No other types allowed.
-- Exactly 4 answer options (1 correct + 3 plausible distractors).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EASY — exactly ${easyCount} questions
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- ALL ${easyCount} must be question_type = "multiple_choice". NO other type is allowed.
+- Each must have exactly 4 options (1 correct + 3 plausible distractors).
 - Test basic recall of facts and definitions.
 - Include a short helpful hint.
-- Set difficulty="easy".
+- Set difficulty = "easy".
 
-MEDIUM (~40%, ~${Math.round(count * 0.40)} questions):
-- question_type MUST be "identification" ONLY. No other types allowed.
-- A direct question expecting a specific name, term, value, or person.
-- Example: "What planet is known as the Red Planet?" → Answer: "Mars"
-- options array must be empty [].
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM — exactly ${mediumCount} questions
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Use ONLY these two types, balanced (~${Math.ceil(mediumCount/2)} each):
+  • "multiple_choice" — 4 options, correct_answer = the correct option text.
+  • "identification" — empty options [], direct question with a specific name/term/value answer.
+- NO enumeration or fill_blank allowed here.
 - Include a structural hint.
-- Set difficulty="medium".
+- Set difficulty = "medium".
 
-HARD (~25%, ~${Math.round(count * 0.25)} questions):
-- Mix of ALL four types: multiple_choice, identification, enumeration, fill_blank.
-- Spread evenly: roughly equal amounts of each type.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HARD — exactly ${hardCount} questions
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Use ALL FOUR types, distributed evenly (~${hardPerType} each):
+  • "multiple_choice" — 4 options, correct_answer = the correct option text.
+  • "identification" — empty options [], specific name/term/value answer.
+  • "enumeration" — empty options [], correct_answer = comma-separated list. Example: "Solid, Liquid, Gas"
+  • "fill_blank" — empty options [], question_text MUST contain ___ for the blank, correct_answer = the missing word/phrase.
 - Test deep understanding and analysis.
-- NO hints (set hint to "").
-- Set difficulty="hard".
+- NO hints (set hint = "").
+- Set difficulty = "hard".
 
-QUESTION TYPE FORMAT RULES:
-- multiple_choice: exactly 4 options array. correct_answer = the correct option text.
-- identification: empty options []. Direct question with a specific answer (name, term, formula, person, value).
-- enumeration: empty options []. correct_answer = comma-separated key terms. Example: "Solid, Liquid, Gas"
-- fill_blank: empty options []. question_text must contain ___ for the blank. correct_answer = exact missing word/phrase.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FORMAT RULES (apply to all questions):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- multiple_choice: options array has exactly 4 strings. correct_answer = one of those strings exactly.
+- identification: options = []. One specific correct answer.
+- enumeration: options = []. correct_answer = comma-separated key items.
+- fill_blank: options = []. question_text contains ___ where the answer goes. correct_answer = the exact word/phrase.
 
-MATH & SCIENCE SUPPORT:
-- If material contains equations or formulas, generate questions that ask students to solve, identify, or complete them.
-- Use fill_blank or identification for math problems (e.g. "Solve: 2x + 5 = 15" → "x = 5").
+MATH & SCIENCE: Use fill_blank or identification for equations (e.g. "Solve: 2x + 5 = 15" → "x = 5").
 
 GLOBAL RULES:
-1. Every question must be directly answerable from the material above. NO external knowledge.
-2. Cover a WIDE variety of topics — spread across the entire material.
-3. Each question must be unique — never repeat the same concept.
+1. Every question must be answerable from the material above. NO external knowledge.
+2. Cover a wide variety of topics across the entire material.
+3. Each question must be unique — no repeated concepts.
 4. Explanations: 1-2 sentences explaining WHY the answer is correct.
-5. "topic" = short 2-4 word label (e.g. "Cell Division", "Algebra Equations").
-6. Never generate trick questions or ambiguous answers.
+5. "topic" = short 2-4 word label (e.g. "Cell Division").
+6. No trick questions or ambiguous answers.
 
-Generate exactly ${count} questions now.`;
+Generate exactly ${count} questions now (${easyCount} easy + ${mediumCount} medium + ${hardCount} hard).`;
 
       const response = await base44.integrations.Core.InvokeLLM({
         prompt,
