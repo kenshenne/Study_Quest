@@ -215,54 +215,66 @@ export default function Upload() {
             }
           }
 
-          // Step 1: Try ExtractDataFromUploadedFile
+          // Step 1: Try standard extraction API
           let extracted = null;
           try {
             const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
               file_url,
               json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
             });
-            if (result?.status === "success" && result.output?.text?.trim().length >= 30) {
-              extracted = result.output.text;
+            const candidate = result?.output?.text || "";
+            // Only accept if it has meaningful content — not just metadata/garbage
+            if (result?.status === "success" && isTextMeaningful(candidate)) {
+              extracted = candidate;
             }
           } catch {
             // extraction API failed — will try LLM fallback below
           }
 
-          // Step 2: LLM fallback — handles PPTX, image-heavy PDFs, and OCR cases
+          // Step 2: LLM fallback — used when extraction fails OR returns non-meaningful text
+          // This handles: styled PDFs, PPTX slides, image-heavy docs, scanned content (OCR)
           if (!extracted) {
             setProgressStep("Using AI to read document content...");
             try {
               const docLabel = fileType === "pptx" ? "PowerPoint presentation" : "PDF document";
               const llmResult = await base44.integrations.Core.InvokeLLM({
-                prompt: `You are a document text extraction assistant. Extract ALL readable text from this ${docLabel}.
+                prompt: `You are a document text extraction assistant. Your only job is to extract and return all readable text from this ${docLabel}.
 
-IMPORTANT: This file may contain a mix of text and images. Your job is to:
-1. Extract all standard text content (titles, headings, paragraphs, bullet points, labels, captions, tables)
-2. If slides or pages appear to be image-based, use OCR to read any visible text within those images
-3. Do NOT skip any slide or page — even if it looks image-heavy, extract whatever text is visible
+This document may be:
+- A styled PDF exported from PowerPoint
+- A multi-column or slide-based layout
+- A document with images alongside text
+- A scanned document (use OCR to read it)
 
-Return the complete raw text as-is. Do NOT summarize or paraphrase. Preserve structure with line breaks between sections/slides.
+Extract ALL of the following:
+- Headings and titles
+- Paragraphs and body text
+- Bullet points and numbered lists
+- Table contents
+- Captions and labels
+- Any other visible text
 
-If after thorough extraction you find absolutely no readable text at all, return an empty string.`,
+Rules:
+- Do NOT summarize or paraphrase — return raw text as extracted
+- Preserve the reading order and structure using line breaks
+- Include text from ALL pages/slides, not just the first
+- If a page appears image-based, apply OCR and extract whatever text is visible
+
+Return only the extracted text. If truly no text exists anywhere, return an empty string.`,
                 file_urls: [file_url],
                 response_json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
               });
-              if (llmResult?.text?.trim().length >= 20) {
-                extracted = llmResult.text;
+              const candidate = llmResult?.text || "";
+              if (isTextMeaningful(candidate)) {
+                extracted = candidate;
               }
             } catch {
-              // LLM fallback also failed — will show error below
+              // LLM fallback also failed
             }
           }
 
-          if (!extracted || extracted.trim().length < 20) {
+          if (!extracted) {
             setError("No readable text found in the uploaded file. Please upload a document with visible text content.");
-            setStep(1); return;
-          }
-
-          if (!isTextMeaningful(extracted)) {
-            setError("The file appears to contain only images or non-readable content. Please upload a document with actual text.");
             setStep(1); return;
           }
 
