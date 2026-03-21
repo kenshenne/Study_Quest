@@ -315,6 +315,14 @@ Return only the extracted text. If truly no text exists anywhere, return an empt
             setStep(1); return;
           }
 
+          // LLM-based content validation — checks for meaningful study material
+          setProgressStep("Validating document content...");
+          const isValid = await validateExtractedText(extracted);
+          if (!isValid) {
+            setError("No readable text found in the uploaded file. Please upload a document with visible text content.");
+            setStep(1); return;
+          }
+
           content = extracted;
           setExtractedContent(content);
           setProgressPct(45);
