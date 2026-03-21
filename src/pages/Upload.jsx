@@ -216,49 +216,62 @@ export default function Upload() {
             }
           }
 
-          let result;
+          // Step 1: Try ExtractDataFromUploadedFile
+          let extracted = null;
           try {
-            result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+            const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
               file_url,
               json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
             });
+            if (result?.status === "success" && result.output?.text?.trim().length >= 30) {
+              extracted = result.output.text;
+            }
           } catch {
-            // Fallback: LLM-based extraction
+            // extraction API failed — will try LLM fallback below
+          }
+
+          // Step 2: LLM fallback (especially useful for PPTX which often fails extraction API)
+          // Also used if extraction returned empty/short text
+          if (!extracted) {
+            setProgressStep("Using AI to read presentation content...");
             try {
               const llmResult = await base44.integrations.Core.InvokeLLM({
-                prompt: `Extract all readable text content from this document. Return all text including titles, headings, paragraphs, bullet points, formulas. Do not summarize — return raw text as-is.`,
+                prompt: `You are a text extraction assistant. Extract ALL readable text from this ${fileType === "pptx" ? "PowerPoint presentation" : "document"}.
+
+Include:
+- Slide titles and headings
+- All bullet points and body text
+- Text boxes and labels
+- Any visible text in diagrams or tables
+- Speaker notes (if present)
+
+Return the raw text content exactly as written — do NOT summarize, rewrite, or skip any text. Preserve slide structure using line breaks.`,
                 file_urls: [file_url],
                 response_json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
               });
-              if (llmResult?.text && llmResult.text.trim().length >= 30) {
-                result = { status: "success", output: { text: llmResult.text } };
-              } else {
-                setError("Failed to extract text from the uploaded document. Please try pasting your text directly.");
-                setStep(1); return;
+              if (llmResult?.text?.trim().length >= 30) {
+                extracted = llmResult.text;
               }
             } catch {
-              setError("Failed to extract text from the uploaded document. Please try pasting your text directly.");
-              setStep(1); return;
+              // LLM fallback also failed
             }
           }
 
-          if (result.status === "success" && result.output?.text) {
-            const extracted = result.output.text;
-            if (!extracted || extracted.trim().length < 30) {
-              setError("No readable text detected in this file. Please upload a document with readable content.");
-              setStep(1); return;
-            }
-            if (!isTextMeaningful(extracted)) {
-              setError("Questions cannot be generated because the uploaded material does not contain meaningful or readable study content.");
-              setStep(1); return;
-            }
-            // No word limit for PDF/PPT — just use full extracted content (trimmed to AI context limit)
-            content = extracted;
-            setExtractedContent(content);
-          } else if (!content) {
-            setError("Failed to extract text from the uploaded document. Please ensure it contains readable text.");
+          if (!extracted || extracted.trim().length < 30) {
+            setError(fileType === "pptx"
+              ? "No readable text found in the presentation. Please ensure your slides contain text content (not just images)."
+              : "No readable text detected in this file. Please upload a document with readable content."
+            );
             setStep(1); return;
           }
+
+          if (!isTextMeaningful(extracted)) {
+            setError("Questions cannot be generated because the uploaded material does not contain meaningful or readable study content.");
+            setStep(1); return;
+          }
+
+          content = extracted;
+          setExtractedContent(content);
           setProgressPct(45);
         }
       } else if (extraImages.length > 0) {
