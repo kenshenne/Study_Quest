@@ -371,12 +371,9 @@ Return only the extracted text. If truly no text exists anywhere, return an empt
           setError("Failed to extract text from the image.");
           setStep(1); return;
         }
-        if (result.status === "success" && result.output?.text && result.output.text.trim().length >= 30) {
-          if (!isTextMeaningful(result.output.text)) {
-            setError("Questions cannot be generated because the uploaded image does not contain readable study information.");
-            setStep(1); return;
-          }
-          content = result.output.text;
+        const imgText = result?.output?.text || "";
+        if (result?.status === "success" && isTextMeaningful(imgText)) {
+          content = imgText;
           setExtractedContent(content);
         } else {
           setError("No readable text detected in the image. Please upload an image with clear, readable text.");
