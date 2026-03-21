@@ -193,10 +193,9 @@ export default function MazeGame() {
     const questionOwnerId = ownerUserId || user.email;
     const allQs = await base44.entities.Question.filter({ material_id: matId, user_id: questionOwnerId });
     if (allQs.length === 0) { alert("No questions found for this material."); return; }
-    const diffQs = allQs.filter(q => q.difficulty === (mpSess?.difficulty || difficulty));
-    const pool = diffQs.length >= 8 ? diffQs : allQs;
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    const limited = shuffled.slice(0, Math.min(shuffled.length, 15));
+    const activeDifficulty = mpSess?.difficulty || difficulty;
+    const pool = buildQuestionPool(allQs, activeDifficulty, 8);
+    const limited = pool.slice(0, Math.min(pool.length, 15));
     setQuestions(limited);
     const newMaze = generateMaze(COLS, ROWS, seed ?? null);
     const cps = placeCheckpoints(newMaze, limited);
