@@ -106,10 +106,8 @@ export default function BlastGame() {
   const startGame = async (matId, diff = difficulty) => {
     const allQs = await base44.entities.Question.filter({ material_id: matId, user_id: user.email });
     if (!allQs.length) { alert("No questions found. Please upload study materials first."); return; }
-    const diffQs = allQs.filter(q => q.difficulty === difficulty);
-    const pool = diffQs.length >= 5 ? diffQs : allQs;
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    setQuestions(shuffled);
+    const pool = buildQuestionPool(allQs, difficulty, 5);
+    setQuestions(pool);
     setQIndex(0);
     setBoard(emptyBoard());
     const p = randomPiece();
