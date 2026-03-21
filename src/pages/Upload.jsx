@@ -230,43 +230,40 @@ export default function Upload() {
             // extraction API failed — will try LLM fallback below
           }
 
-          // Step 2: LLM fallback (especially useful for PPTX which often fails extraction API)
-          // Also used if extraction returned empty/short text
+          // Step 2: LLM fallback — handles PPTX, image-heavy PDFs, and OCR cases
           if (!extracted) {
-            setProgressStep("Using AI to read presentation content...");
+            setProgressStep("Using AI to read document content...");
             try {
+              const docLabel = fileType === "pptx" ? "PowerPoint presentation" : "PDF document";
               const llmResult = await base44.integrations.Core.InvokeLLM({
-                prompt: `You are a text extraction assistant. Extract ALL readable text from this ${fileType === "pptx" ? "PowerPoint presentation" : "document"}.
+                prompt: `You are a document text extraction assistant. Extract ALL readable text from this ${docLabel}.
 
-Include:
-- Slide titles and headings
-- All bullet points and body text
-- Text boxes and labels
-- Any visible text in diagrams or tables
-- Speaker notes (if present)
+IMPORTANT: This file may contain a mix of text and images. Your job is to:
+1. Extract all standard text content (titles, headings, paragraphs, bullet points, labels, captions, tables)
+2. If slides or pages appear to be image-based, use OCR to read any visible text within those images
+3. Do NOT skip any slide or page — even if it looks image-heavy, extract whatever text is visible
 
-Return the raw text content exactly as written — do NOT summarize, rewrite, or skip any text. Preserve slide structure using line breaks.`,
+Return the complete raw text as-is. Do NOT summarize or paraphrase. Preserve structure with line breaks between sections/slides.
+
+If after thorough extraction you find absolutely no readable text at all, return an empty string.`,
                 file_urls: [file_url],
                 response_json_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"] }
               });
-              if (llmResult?.text?.trim().length >= 30) {
+              if (llmResult?.text?.trim().length >= 20) {
                 extracted = llmResult.text;
               }
             } catch {
-              // LLM fallback also failed
+              // LLM fallback also failed — will show error below
             }
           }
 
-          if (!extracted || extracted.trim().length < 30) {
-            setError(fileType === "pptx"
-              ? "No readable text found in the presentation. Please ensure your slides contain text content (not just images)."
-              : "No readable text detected in this file. Please upload a document with readable content."
-            );
+          if (!extracted || extracted.trim().length < 20) {
+            setError("No readable text found in the uploaded file. Please upload a document with visible text content.");
             setStep(1); return;
           }
 
           if (!isTextMeaningful(extracted)) {
-            setError("Questions cannot be generated because the uploaded material does not contain meaningful or readable study content.");
+            setError("The file appears to contain only images or non-readable content. Please upload a document with actual text.");
             setStep(1); return;
           }
 
