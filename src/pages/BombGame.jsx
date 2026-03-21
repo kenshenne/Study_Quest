@@ -106,7 +106,7 @@ export default function BombGame() {
     const bombCount = randomBombCount(difficulty, basePool.length);
     const needed = bombCount + 5;
     // Pad pool by recycling if needed
-    let pool = [...basePool].sort(() => Math.random() - 0.5);
+    let pool = [...basePool];
     while (pool.length < needed) {
       pool = [...pool, ...[...basePool].sort(() => Math.random() - 0.5)];
     }
