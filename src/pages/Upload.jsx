@@ -466,6 +466,10 @@ EASY — exactly ${easyCount} questions
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - ALL ${easyCount} must be question_type = "multiple_choice". NO other type is allowed.
 - Each must have exactly 4 options (1 correct + 3 plausible distractors).
+- ALL 4 options MUST be fully written, specific, content-rich answers derived from the study material.
+- NEVER use generic placeholders like "Option A", "Option B", "Option C", "Option D", or any incomplete text.
+- Each distractor must be a plausible but incorrect answer related to the topic — not vague or fabricated.
+- If you cannot generate 3 meaningful distractors for a question, skip it and generate a different question instead.
 - Test basic recall of facts and definitions.
 - Include a short helpful hint.
 - Set difficulty = "easy".
