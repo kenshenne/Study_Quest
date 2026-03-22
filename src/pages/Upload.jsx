@@ -480,6 +480,7 @@ MEDIUM — exactly ${mediumCount} questions
 - Use ONLY these two types, balanced (~${Math.ceil(mediumCount/2)} each):
   • "multiple_choice" — 4 options, correct_answer = the correct option text.
   • "identification" — empty options [], direct question with a specific name/term/value answer.
+- For ALL multiple_choice questions: ALL 4 options MUST be fully written, specific answers derived from the material. NEVER use "Option A/B/C/D" or incomplete placeholder text. Each distractor must be a believable but wrong answer from the subject matter.
 - NO enumeration or fill_blank allowed here.
 - Include a structural hint.
 - Set difficulty = "medium".
