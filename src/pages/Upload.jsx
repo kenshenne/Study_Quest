@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
+import JSZip from "jszip";
 import {
   Upload as UploadIcon, FileText, ArrowLeft, CheckCircle,
   Loader2, Trash2, X, BookOpen, Zap, ChevronRight, Eye, EyeOff, RefreshCw
