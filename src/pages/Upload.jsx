@@ -117,7 +117,7 @@ function isSupportedFile(file) {
 }
 
 // File types supported by ExtractDataFromUploadedFile / LLM extraction (uploaded to server)
-const EXTRACTABLE_TYPES = ["pdf", "pptx", "image", "doc"];
+const EXTRACTABLE_TYPES = ["pdf", "pptx", "image"];
 
 function FileIcon({ type }) {
   const icons = { pdf: "📄", pptx: "📊", image: "🖼️", text: "📝", doc: "📝" };
