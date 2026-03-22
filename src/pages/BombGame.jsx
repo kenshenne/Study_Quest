@@ -361,13 +361,13 @@ export default function BombGame() {
                 onClick={() => { setSessionId(null); setPhase("setup"); }}
                 className="flex-1 py-3 bg-white/10 hover:bg-white/15 rounded-xl text-sm font-semibold transition-colors"
               >
-                🔄 Play Again
+                Play Again
               </button>
               <a
                 href={createPageUrl("Dashboard")}
                 className="flex-1 py-3 bg-violet-600 hover:bg-violet-500 rounded-xl text-sm font-semibold transition-colors text-center"
               >
-                🏠 Exit Game
+                Exit Game
               </a>
             </div>
           </div>
