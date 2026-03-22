@@ -307,7 +307,7 @@ export default function Upload() {
           if (!extracted) {
             setProgressStep("Using AI to read document content...");
             try {
-              const docLabel = fileType === "pptx" ? "PowerPoint presentation" : fileType === "doc" ? "Word document" : "PDF document";
+              const docLabel = fileType === "pptx" ? "PowerPoint presentation" : "PDF document";
               const llmResult = await base44.integrations.Core.InvokeLLM({
                 prompt: `You are a document text extraction assistant. Your only job is to extract and return all readable text from this ${docLabel}.
 
