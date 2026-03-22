@@ -221,15 +221,26 @@ export default function Upload() {
         const fileType = getFileType(file);
 
         if (!EXTRACTABLE_TYPES.includes(fileType)) {
-          // Only .txt files reach here — read as plain text
           setProgressStep("Reading file content...");
           setProgressPct(20);
-          const textFromFile = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result || "");
-            reader.onerror = () => reject(new Error("Failed to read file."));
-            reader.readAsText(file);
-          });
+          let textFromFile = "";
+          if (fileType === "doc") {
+            // DOC/DOCX are ZIP-based XML — extract text client-side with JSZip
+            try {
+              textFromFile = await extractDocxText(file);
+            } catch {
+              setError("Failed to read the Word document. Please try saving it as PDF or paste your text directly.");
+              setStep(1); return;
+            }
+          } else {
+            // Plain .txt
+            textFromFile = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = (e) => resolve(e.target.result || "");
+              reader.onerror = () => reject(new Error("Failed to read file."));
+              reader.readAsText(file);
+            });
+          }
           if (!textFromFile || textFromFile.trim().length < 50) {
             setError("Failed to extract text from the uploaded document. Please try a PDF or paste your text directly.");
             setStep(1); return;
