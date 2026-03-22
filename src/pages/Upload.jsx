@@ -493,6 +493,7 @@ HARD — exactly ${hardCount} questions
   • "identification" — empty options [], specific name/term/value answer.
   • "enumeration" — empty options [], correct_answer = comma-separated list. Example: "Solid, Liquid, Gas"
   • "fill_blank" — empty options [], question_text MUST contain ___ for the blank, correct_answer = the missing word/phrase.
+- For ALL multiple_choice questions: ALL 4 options MUST be fully written, content-rich answers from the material. NEVER use "Option A/B/C/D" or vague text. Distractors must be sophisticated and plausible but clearly wrong.
 - Test deep understanding and analysis.
 - NO hints (set hint = "").
 - Set difficulty = "hard".
