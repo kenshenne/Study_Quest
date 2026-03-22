@@ -555,20 +555,28 @@ Generate exactly ${count} questions now (${easyCount} easy + ${mediumCount} medi
         medium: ["multiple_choice", "identification"],
         hard: ["multiple_choice", "identification", "enumeration", "fill_blank"]
       };
-      const questions = rawQuestions.map(q => {
+      const questions = rawQuestions.filter(q => {
+        // Drop multiple_choice questions with placeholder options
+        if (q.question_type === "multiple_choice") {
+          const hasPlaceholders = (q.options || []).some(o =>
+            /^option\s*[a-d]$/i.test(o.trim()) || o.trim().length < 3
+          );
+          if (hasPlaceholders || (q.options || []).length !== 4) return false;
+        }
+        return true;
+      }).map(q => {
         const diff = q.difficulty || "medium";
         const allowed = ALLOWED_TYPES[diff] || ALLOWED_TYPES.medium;
         if (!allowed.includes(q.question_type)) {
-          // Fall back to the primary type for that difficulty
           const fallback = allowed[0];
           return {
             ...q,
             question_type: fallback,
-            options: fallback === "multiple_choice" ? (q.options?.length === 4 ? q.options : [q.correct_answer, "Option B", "Option C", "Option D"]) : []
+            options: fallback === "multiple_choice" ? (q.options?.length === 4 ? q.options : []) : []
           };
         }
         return q;
-      });
+      }).filter(q => !(q.question_type === "multiple_choice" && (q.options || []).length !== 4));
 
       if (questions.length > 0) {
         await base44.entities.Question.bulkCreate(
