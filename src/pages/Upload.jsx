@@ -93,8 +93,8 @@ function isSupportedFile(file) {
   return SUPPORTED_EXTENSIONS.some(ext => name.endsWith(ext));
 }
 
-// File types supported by ExtractDataFromUploadedFile
-const EXTRACTABLE_TYPES = ["pdf", "pptx", "image"];
+// File types supported by ExtractDataFromUploadedFile / LLM extraction (uploaded to server)
+const EXTRACTABLE_TYPES = ["pdf", "pptx", "image", "doc"];
 
 function FileIcon({ type }) {
   const icons = { pdf: "📄", pptx: "📊", image: "🖼️", text: "📝", doc: "📝" };
