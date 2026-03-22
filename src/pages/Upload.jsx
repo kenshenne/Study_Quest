@@ -27,6 +27,28 @@ const MAX_AI_CONTENT_CHARS = 50000; // Max chars sent to AI (~12k words / ~16k t
 // Supported file extensions
 const SUPPORTED_EXTENSIONS = [".pdf", ".ppt", ".pptx", ".doc", ".docx", ".txt", ".jpg", ".jpeg", ".png"];
 
+// Extract plain text from a .docx file (ZIP + XML) client-side
+async function extractDocxText(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const zip = await JSZip.loadAsync(arrayBuffer);
+  const docXml = await zip.file("word/document.xml")?.async("string");
+  if (!docXml) return "";
+  // Strip XML tags and decode entities, preserve spacing
+  const text = docXml
+    .replace(/<w:p[ >]/g, "\n<w:p ")  // paragraph breaks
+    .replace(/<w:br[^/]*/g, "\n")      // line breaks
+    .replace(/<[^>]+>/g, "")           // remove all tags
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/[ \t]+/g, " ")           // normalize spaces
+    .replace(/\n{3,}/g, "\n\n")        // collapse excess blank lines
+    .trim();
+  return text;
+}
+
 function isTextMeaningful(text) {
   if (!text || text.trim().length < 10) return false;
   const words = text.trim().split(/\s+/).filter(w => w.length > 0);
