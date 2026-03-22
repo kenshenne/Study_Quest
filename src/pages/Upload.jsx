@@ -270,11 +270,11 @@ export default function Upload() {
           }
 
           // Step 2: LLM fallback — used when extraction fails OR returns non-meaningful text
-          // This handles: styled PDFs, PPTX slides, image-heavy docs, scanned content (OCR)
+          // This handles: styled PDFs, PPTX slides, image-heavy docs, scanned content (OCR), DOC/DOCX
           if (!extracted) {
             setProgressStep("Using AI to read document content...");
             try {
-              const docLabel = fileType === "pptx" ? "PowerPoint presentation" : "PDF document";
+              const docLabel = fileType === "pptx" ? "PowerPoint presentation" : fileType === "doc" ? "Word document" : "PDF document";
               const llmResult = await base44.integrations.Core.InvokeLLM({
                 prompt: `You are a document text extraction assistant. Your only job is to extract and return all readable text from this ${docLabel}.
 
