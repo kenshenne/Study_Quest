@@ -198,7 +198,7 @@ export default function Upload() {
         const fileType = getFileType(file);
 
         if (!EXTRACTABLE_TYPES.includes(fileType)) {
-          // .txt, .doc, .docx — read as plain text
+          // Only .txt files reach here — read as plain text
           setProgressStep("Reading file content...");
           setProgressPct(20);
           const textFromFile = await new Promise((resolve, reject) => {
@@ -211,7 +211,6 @@ export default function Upload() {
             setError("Failed to extract text from the uploaded document. Please try a PDF or paste your text directly.");
             setStep(1); return;
           }
-          // basic sanity check for plain text files — isTextMeaningful is sufficient here
           if (!isTextMeaningful(textFromFile)) {
             setError("No readable text found in the uploaded file. Please upload a document with visible text content.");
             setStep(1); return;
