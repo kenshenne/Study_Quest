@@ -602,7 +602,7 @@ Be lenient — if the question could plausibly come from a longer version of thi
         medium: ["multiple_choice", "identification"],
         hard: ["multiple_choice", "identification", "enumeration", "fill_blank"]
       };
-      const questions = rawQuestions.filter(q => {
+      const questions = validatedQuestions.filter(q => {
         // Drop multiple_choice questions with placeholder options
         if (q.question_type === "multiple_choice") {
           const hasPlaceholders = (q.options || []).some(o =>
