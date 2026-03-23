@@ -511,12 +511,13 @@ FORMAT RULES (apply to all questions):
 MATH & SCIENCE: Use fill_blank or identification for equations (e.g. "Solve: 2x + 5 = 15" → "x = 5").
 
 GLOBAL RULES:
-1. Every question must be answerable from the material above. NO external knowledge.
+1. ⚠️ STRICT RELEVANCE: Every question, correct answer, and distractor must be directly sourced from the material above. Do NOT invent facts or use general knowledge outside the material.
 2. Cover a wide variety of topics across the entire material.
 3. Each question must be unique — no repeated concepts.
-4. Explanations: 1-2 sentences explaining WHY the answer is correct.
-5. "topic" = short 2-4 word label (e.g. "Cell Division").
+4. Explanations: 1-2 sentences explaining WHY the answer is correct, citing the material.
+5. "topic" = short 2-4 word label matching a concept IN the material (e.g. "Cell Division").
 6. No trick questions or ambiguous answers.
+7. For each question, set "relevant_to_material": true only if the question is 100% answerable from the material above. Never set it to false — if you cannot source a question from the material, skip it and write a different one.
 
 Generate exactly ${count} questions now (${easyCount} easy + ${mediumCount} medium + ${hardCount} hard).`;
 
