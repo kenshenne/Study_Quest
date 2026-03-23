@@ -445,7 +445,9 @@ Return only the extracted text. If truly no text exists anywhere, return an empt
       const hardCount = count - easyCount - mediumCount;
       const hardPerType = Math.floor(hardCount / 4);
 
-      const prompt = `You are an expert educational question generator for a gamified learning app. Create high-quality study questions STRICTLY based on the provided material.
+      const prompt = `You are an expert educational question generator for a gamified learning app. Your ONLY source of information is the STUDY MATERIAL provided below. You must NOT use any outside knowledge, general facts, or assumptions beyond what is explicitly written in the material.
+
+⚠️ CRITICAL RULE: Every single question, answer, and distractor MUST be directly traceable to a specific sentence, fact, concept, term, or example found in the STUDY MATERIAL below. If a piece of information is NOT in the material, do NOT use it.
 
 This material may have been extracted from a PDF, PowerPoint, images, or math/science documents. Support ALL content types including:
 - Lectures, notes, textbooks
@@ -454,7 +456,7 @@ This material may have been extracted from a PDF, PowerPoint, images, or math/sc
 - Slide titles, bullet points, diagrams, and notes
 
 ═══════════════════════════════════
-STUDY MATERIAL:
+STUDY MATERIAL (your ONLY source):
 ═══════════════════════════════════
 ${content}
 ═══════════════════════════════════
