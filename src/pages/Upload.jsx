@@ -548,10 +548,53 @@ Generate exactly ${count} questions now (${easyCount} easy + ${mediumCount} medi
         }
       });
 
+      setProgressStep("Validating question relevance...");
+      setProgressPct(75);
+
+      const rawQuestions = (response.questions || []).filter(q => q.relevant_to_material !== false);
+
+      // Secondary LLM relevance check — batch validate all questions against a content fingerprint
+      const contentKeywords = content.slice(0, 2000); // use first ~2000 chars as a content fingerprint
+      let validatedQuestions = rawQuestions;
+      try {
+        const relevanceCheck = await base44.integrations.Core.InvokeLLM({
+          prompt: `You are a strict question relevance auditor. Given the following study material excerpt and a list of quiz questions, identify which questions are NOT directly answerable from the material.
+
+STUDY MATERIAL EXCERPT:
+---
+${contentKeywords}
+---
+(Note: The full material may be longer. Use the excerpt as a guide for the main topic and key concepts.)
+
+QUESTIONS (as JSON array index):
+${rawQuestions.map((q, i) => `${i}: "${q.question_text}" | answer: "${q.correct_answer}"`).join('\n')}
+
+For each question index, output whether it is relevant (directly tied to the material's topic and concepts) or not.
+Mark as irrelevant ONLY if the question is clearly about a completely different subject than what the material covers.
+Be lenient — if the question could plausibly come from a longer version of this material on the same topic, mark it as relevant.`,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              irrelevant_indices: {
+                type: "array",
+                items: { type: "number" },
+                description: "Indices of questions that are NOT relevant to the material"
+              }
+            },
+            required: ["irrelevant_indices"]
+          }
+        });
+        const badIndices = new Set(relevanceCheck?.irrelevant_indices || []);
+        if (badIndices.size > 0) {
+          validatedQuestions = rawQuestions.filter((_, i) => !badIndices.has(i));
+        }
+      } catch {
+        // If validation fails, proceed with all questions
+        validatedQuestions = rawQuestions;
+      }
+
       setProgressStep("Saving questions...");
       setProgressPct(85);
-
-      const rawQuestions = response.questions || [];
 
       // Enforce type rules — correct any violations from the LLM
       const ALLOWED_TYPES = {
