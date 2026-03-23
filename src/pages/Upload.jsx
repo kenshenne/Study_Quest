@@ -539,7 +539,8 @@ Generate exactly ${count} questions now (${easyCount} easy + ${mediumCount} medi
                   correct_answer: { type: "string" },
                   explanation: { type: "string" },
                   topic: { type: "string" },
-                  hint: { type: "string" }
+                  hint: { type: "string" },
+                  relevant_to_material: { type: "boolean" }
                 }
               }
             }
